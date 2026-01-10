@@ -3,7 +3,15 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { MusicProvider } from "@/contexts/MusicContext";
+import BottomNav from "@/components/BottomNav";
+import MiniPlayer from "@/components/MiniPlayer";
 import Index from "./pages/Index";
+import Player from "./pages/Player";
+import Library from "./pages/Library";
+import Search from "./pages/Search";
+import Profile from "./pages/Profile";
+import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -11,15 +19,25 @@ const queryClient = new QueryClient();
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Index />} />
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </BrowserRouter>
+      <MusicProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <div className="max-w-lg mx-auto min-h-screen relative">
+            <Routes>
+              <Route path="/" element={<Index />} />
+              <Route path="/player" element={<Player />} />
+              <Route path="/library" element={<Library />} />
+              <Route path="/search" element={<Search />} />
+              <Route path="/profile" element={<Profile />} />
+              <Route path="/settings" element={<Settings />} />
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+            <MiniPlayer />
+            <BottomNav />
+          </div>
+        </BrowserRouter>
+      </MusicProvider>
     </TooltipProvider>
   </QueryClientProvider>
 );

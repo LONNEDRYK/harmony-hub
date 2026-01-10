@@ -2,7 +2,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import { MusicProvider } from "@/contexts/MusicContext";
 import BottomNav from "@/components/BottomNav";
 import MiniPlayer from "@/components/MiniPlayer";
@@ -16,6 +16,31 @@ import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
+const AppContent = () => {
+  const location = useLocation();
+  const isPlayerPage = location.pathname === '/player';
+
+  return (
+    <div className="max-w-lg mx-auto min-h-screen relative">
+      <Routes>
+        <Route path="/" element={<Index />} />
+        <Route path="/player" element={<Player />} />
+        <Route path="/library" element={<Library />} />
+        <Route path="/search" element={<Search />} />
+        <Route path="/profile" element={<Profile />} />
+        <Route path="/settings" element={<Settings />} />
+        <Route path="*" element={<NotFound />} />
+      </Routes>
+      {!isPlayerPage && (
+        <>
+          <MiniPlayer />
+          <BottomNav />
+        </>
+      )}
+    </div>
+  );
+};
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
@@ -23,19 +48,7 @@ const App = () => (
         <Toaster />
         <Sonner />
         <BrowserRouter>
-          <div className="max-w-lg mx-auto min-h-screen relative">
-            <Routes>
-              <Route path="/" element={<Index />} />
-              <Route path="/player" element={<Player />} />
-              <Route path="/library" element={<Library />} />
-              <Route path="/search" element={<Search />} />
-              <Route path="/profile" element={<Profile />} />
-              <Route path="/settings" element={<Settings />} />
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-            <MiniPlayer />
-            <BottomNav />
-          </div>
+          <AppContent />
         </BrowserRouter>
       </MusicProvider>
     </TooltipProvider>

@@ -11,6 +11,20 @@ export interface Track {
   isFavorite: boolean;
 }
 
+export interface Playlist {
+  id: string;
+  name: string;
+  cover: string;
+  trackIds: string[];
+  createdAt: Date;
+}
+
+export interface UserProfile {
+  name: string;
+  avatar: string;
+  banner: string;
+}
+
 interface MusicContextType {
   tracks: Track[];
   currentTrack: Track | null;
@@ -19,6 +33,8 @@ interface MusicContextType {
   volume: number;
   shuffle: boolean;
   repeat: 'off' | 'all' | 'one';
+  playlists: Playlist[];
+  userProfile: UserProfile;
   addTrack: (file: File) => Promise<void>;
   removeTrack: (id: string) => void;
   playTrack: (track: Track) => void;
@@ -30,6 +46,11 @@ interface MusicContextType {
   toggleShuffle: () => void;
   toggleRepeat: () => void;
   toggleFavorite: (id: string) => void;
+  createPlaylist: (name: string) => void;
+  deletePlaylist: (id: string) => void;
+  addToPlaylist: (playlistId: string, trackId: string) => void;
+  removeFromPlaylist: (playlistId: string, trackId: string) => void;
+  updateUserProfile: (profile: Partial<UserProfile>) => void;
   audioRef: React.RefObject<HTMLAudioElement>;
 }
 
@@ -43,6 +64,12 @@ const defaultCovers = [
   'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=300&h=300&fit=crop',
 ];
 
+const defaultProfile: UserProfile = {
+  name: 'Utilisateur',
+  avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=200&h=200&fit=crop',
+  banner: 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=800&h=400&fit=crop',
+};
+
 export const MusicProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [tracks, setTracks] = useState<Track[]>([]);
   const [currentTrack, setCurrentTrack] = useState<Track | null>(null);
@@ -51,6 +78,8 @@ export const MusicProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const [volume, setVolumeState] = useState(0.8);
   const [shuffle, setShuffle] = useState(false);
   const [repeat, setRepeat] = useState<'off' | 'all' | 'one'>('off');
+  const [playlists, setPlaylists] = useState<Playlist[]>([]);
+  const [userProfile, setUserProfile] = useState<UserProfile>(defaultProfile);
   const audioRef = useRef<HTMLAudioElement>(null);
 
   useEffect(() => {
@@ -193,6 +222,45 @@ export const MusicProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     );
   };
 
+  const createPlaylist = (name: string) => {
+    const newPlaylist: Playlist = {
+      id: Date.now().toString(),
+      name,
+      cover: defaultCovers[Math.floor(Math.random() * defaultCovers.length)],
+      trackIds: [],
+      createdAt: new Date(),
+    };
+    setPlaylists((prev) => [...prev, newPlaylist]);
+  };
+
+  const deletePlaylist = (id: string) => {
+    setPlaylists((prev) => prev.filter((p) => p.id !== id));
+  };
+
+  const addToPlaylist = (playlistId: string, trackId: string) => {
+    setPlaylists((prev) =>
+      prev.map((p) =>
+        p.id === playlistId && !p.trackIds.includes(trackId)
+          ? { ...p, trackIds: [...p.trackIds, trackId] }
+          : p
+      )
+    );
+  };
+
+  const removeFromPlaylist = (playlistId: string, trackId: string) => {
+    setPlaylists((prev) =>
+      prev.map((p) =>
+        p.id === playlistId
+          ? { ...p, trackIds: p.trackIds.filter((id) => id !== trackId) }
+          : p
+      )
+    );
+  };
+
+  const updateUserProfile = (profile: Partial<UserProfile>) => {
+    setUserProfile((prev) => ({ ...prev, ...profile }));
+  };
+
   return (
     <MusicContext.Provider
       value={{
@@ -203,6 +271,8 @@ export const MusicProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         volume,
         shuffle,
         repeat,
+        playlists,
+        userProfile,
         addTrack,
         removeTrack,
         playTrack,
@@ -214,6 +284,11 @@ export const MusicProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         toggleShuffle,
         toggleRepeat,
         toggleFavorite,
+        createPlaylist,
+        deletePlaylist,
+        addToPlaylist,
+        removeFromPlaylist,
+        updateUserProfile,
         audioRef,
       }}
     >

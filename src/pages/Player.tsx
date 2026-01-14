@@ -8,13 +8,14 @@ import {
   Pause,
   SkipForward,
   Shuffle,
-  Timer,
+  Repeat,
   Share2,
   ListMusic,
-  Disc3,
+  Mic2,
+  Camera
 } from 'lucide-react';
 import { useMusic } from '@/contexts/MusicContext';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import TrackOptionsSheet from '@/components/TrackOptionsSheet';
 
 const formatTime = (seconds: number) => {
@@ -23,17 +24,25 @@ const formatTime = (seconds: number) => {
   return `${mins}:${secs.toString().padStart(2, '0')}`;
 };
 
-// Simulated lyrics with timestamps
+// Real lyrics database simulation
 const getLyricsForTrack = (track: { title: string; artist: string }) => {
-  return [
-    { time: 0, text: "♪ Instrumental ♪" },
-    { time: 15, text: "Première ligne des paroles" },
-    { time: 25, text: "Deuxième ligne qui suit" },
-    { time: 35, text: "Le rythme continue" },
-    { time: 45, text: "La mélodie s'élève" },
-    { time: 55, text: "Les mots s'envolent" },
-    { time: 65, text: "La musique nous emporte" },
-  ];
+  const lyricsDatabase: Record<string, { time: number; text: string }[]> = {
+    default: [
+      { time: 0, text: "🎵 Intro musicale 🎵" },
+      { time: 10, text: "Les premières notes résonnent" },
+      { time: 18, text: "La mélodie prend son envol" },
+      { time: 26, text: "Chaque son raconte une histoire" },
+      { time: 34, text: "La musique nous transporte" },
+      { time: 42, text: "Dans un monde de sensations" },
+      { time: 50, text: "Les émotions se libèrent" },
+      { time: 58, text: "Au rythme de nos cœurs" },
+      { time: 66, text: "La musique nous unit" },
+      { time: 74, text: "Dans cette harmonie parfaite" },
+      { time: 82, text: "🎵 Outro 🎵" },
+    ],
+  };
+  
+  return lyricsDatabase.default;
 };
 
 const Player = () => {
@@ -41,16 +50,20 @@ const Player = () => {
   const [showOptions, setShowOptions] = useState(false);
   const [showLyrics, setShowLyrics] = useState(false);
   const [currentLyricIndex, setCurrentLyricIndex] = useState(0);
+  const coverInputRef = useRef<HTMLInputElement>(null);
+  
   const {
     currentTrack,
     isPlaying,
     currentTime,
     shuffle,
+    repeat,
     togglePlay,
     nextTrack,
     prevTrack,
     seek,
     toggleShuffle,
+    toggleRepeat,
     toggleFavorite,
   } = useMusic();
 
@@ -83,26 +96,32 @@ const Player = () => {
     seek(percent * currentTrack.duration);
   };
 
-  // Extract dominant color simulation
+  const handleCoverChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      // In a real app, you'd update the track cover
+      console.log('New cover:', file);
+    }
+  };
+
   const gradientColors = [
-    'from-purple-600/90 via-pink-500/70 to-yellow-400/80',
-    'from-blue-600/90 via-cyan-500/70 to-green-400/80',
-    'from-orange-600/90 via-red-500/70 to-pink-400/80',
+    'from-violet-600/80 via-purple-500/60 to-fuchsia-400/70',
+    'from-blue-600/80 via-cyan-500/60 to-teal-400/70',
+    'from-orange-600/80 via-red-500/60 to-pink-400/70',
+    'from-emerald-600/80 via-green-500/60 to-lime-400/70',
   ];
   const gradientIndex = currentTrack.id.charCodeAt(0) % gradientColors.length;
 
   return (
-    <div className="min-h-screen flex flex-col bg-black relative overflow-hidden">
-      {/* Dynamic Background Gradient */}
-      <div 
-        className={`absolute inset-0 bg-gradient-to-b ${gradientColors[gradientIndex]} opacity-60`}
-      />
-      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/30" />
+    <div className="h-screen flex flex-col bg-black relative overflow-hidden">
+      {/* Dynamic Background */}
+      <div className={`absolute inset-0 bg-gradient-to-b ${gradientColors[gradientIndex]} opacity-50`} />
+      <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent" />
 
       {/* Content */}
       <div className="relative flex-1 flex flex-col p-5 pt-safe">
         {/* Header */}
-        <header className="flex items-center justify-between mb-6">
+        <header className="flex items-center justify-between mb-4">
           <button
             onClick={() => navigate(-1)}
             className="w-10 h-10 flex items-center justify-center"
@@ -110,10 +129,10 @@ const Player = () => {
             <ChevronDown className="w-7 h-7 text-white" />
           </button>
           <div className="text-center flex-1">
-            <p className="text-xs text-white/70 uppercase tracking-widest font-medium">
-              Lecture à partir de playlist
+            <p className="text-[10px] text-white/60 uppercase tracking-widest font-medium">
+              En lecture
             </p>
-            <p className="text-sm text-white font-semibold mt-0.5">
+            <p className="text-xs text-white font-medium mt-0.5 truncate max-w-[200px] mx-auto">
               {currentTrack.album || 'Ma Bibliothèque'}
             </p>
           </div>
@@ -121,64 +140,62 @@ const Player = () => {
             onClick={() => setShowOptions(true)}
             className="w-10 h-10 flex items-center justify-center"
           >
-            <MoreVertical className="w-6 h-6 text-white" />
+            <MoreVertical className="w-5 h-5 text-white" />
           </button>
         </header>
 
-        {/* Album Art - Large */}
-        <div className="flex-1 flex items-center justify-center py-4">
-          <div className="relative w-full max-w-sm aspect-square">
+        {/* Album Art */}
+        <div className="flex-1 flex items-center justify-center py-2">
+          <div className="relative w-full max-w-[280px] aspect-square">
             <img
               src={currentTrack.cover}
               alt={currentTrack.title}
-              className="w-full h-full rounded-2xl object-cover shadow-2xl"
+              className="w-full h-full rounded-3xl object-cover shadow-2xl"
             />
-            {isPlaying && (
-              <div className="absolute inset-0 rounded-2xl bg-black/10 flex items-center justify-center">
-                <Disc3 className="w-12 h-12 text-white/30 animate-spin" style={{ animationDuration: '3s' }} />
-              </div>
-            )}
+            {/* Change cover button */}
+            <button
+              onClick={() => coverInputRef.current?.click()}
+              className="absolute bottom-3 right-3 w-10 h-10 rounded-full bg-black/60 backdrop-blur flex items-center justify-center"
+            >
+              <Camera className="w-5 h-5 text-white/80" />
+            </button>
+            <input
+              ref={coverInputRef}
+              type="file"
+              accept="image/*"
+              onChange={handleCoverChange}
+              className="hidden"
+            />
           </div>
         </div>
 
-        {/* Track Info with Favorite */}
-        <div className="flex items-center justify-between mb-4 mt-2">
-          <div className="flex items-center gap-3 flex-1 min-w-0">
-            <img
-              src={currentTrack.cover}
-              alt={currentTrack.title}
-              className="w-12 h-12 rounded-lg object-cover"
-            />
-            <div className="flex-1 min-w-0">
-              <h1 className="text-xl font-bold text-white truncate">{currentTrack.title}</h1>
-              <p className="text-white/60 truncate">{currentTrack.artist}</p>
-            </div>
+        {/* Track Info */}
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex-1 min-w-0 pr-4">
+            <h1 className="text-xl font-bold text-white truncate">{currentTrack.title}</h1>
+            <p className="text-white/60 text-sm truncate">{currentTrack.artist}</p>
           </div>
           <button
             onClick={() => toggleFavorite(currentTrack.id)}
             className="p-2 transition-transform active:scale-90"
           >
-            {currentTrack.isFavorite ? (
-              <div className="w-7 h-7 rounded-full bg-green-500 flex items-center justify-center">
-                <Heart className="w-4 h-4 text-white fill-white" />
-              </div>
-            ) : (
-              <Heart className="w-7 h-7 text-white/60" />
-            )}
+            <Heart 
+              className={`w-6 h-6 ${currentTrack.isFavorite ? 'text-red-500 fill-red-500' : 'text-white/60'}`}
+            />
           </button>
         </div>
 
-        {/* Progress Bar */}
-        <div className="mb-6">
+        {/* Progress */}
+        <div className="mb-5">
           <div 
-            className="h-1 bg-white/20 rounded-full cursor-pointer overflow-hidden"
+            className="h-1.5 bg-white/20 rounded-full cursor-pointer overflow-hidden"
             onClick={handleProgressClick}
           >
             <div
-              className="h-full bg-white rounded-full transition-all duration-100 relative"
+              className="h-full bg-white rounded-full relative"
               style={{ width: `${progress}%` }}
             >
-              <div className="absolute right-0 top-1/2 -translate-y-1/2 w-3 h-3 bg-white rounded-full shadow-lg" />
+              <div className="absolute right-0 top-1/2 -translate-y-1/2 w-4 h-4 bg-white rounded-full shadow-lg -mr-2" />
             </div>
           </div>
           <div className="flex justify-between text-xs text-white/50 mt-2 font-medium">
@@ -187,39 +204,22 @@ const Player = () => {
           </div>
         </div>
 
-        {/* Artist Credits */}
-        <div className="flex items-center gap-4 mb-6 overflow-x-auto no-scrollbar">
-          {currentTrack.artist.split(',').map((artist, i) => (
-            <span 
-              key={i} 
-              className="text-sm font-bold text-white/40 uppercase tracking-wider whitespace-nowrap"
-            >
-              {artist.trim()}
-            </span>
-          ))}
-        </div>
-
         {/* Main Controls */}
-        <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center justify-between mb-5">
           <button
             onClick={toggleShuffle}
-            className={`p-3 transition-all active:scale-90 ${
-              shuffle ? 'text-green-500' : 'text-white/60'
-            }`}
+            className={`p-3 ${shuffle ? 'text-primary' : 'text-white/50'}`}
           >
-            <Shuffle className="w-6 h-6" />
+            <Shuffle className="w-5 h-5" />
           </button>
 
-          <button
-            onClick={prevTrack}
-            className="p-2 transition-transform active:scale-90"
-          >
-            <SkipBack className="w-9 h-9 text-white" fill="currentColor" />
+          <button onClick={prevTrack} className="p-2">
+            <SkipBack className="w-8 h-8 text-white" fill="currentColor" />
           </button>
 
           <button
             onClick={togglePlay}
-            className="w-16 h-16 rounded-full bg-white flex items-center justify-center shadow-xl transition-transform active:scale-95"
+            className="w-16 h-16 rounded-full bg-white flex items-center justify-center shadow-xl"
           >
             {isPlaying ? (
               <Pause className="w-7 h-7 text-black" fill="currentColor" />
@@ -228,54 +228,66 @@ const Player = () => {
             )}
           </button>
 
-          <button
-            onClick={nextTrack}
-            className="p-2 transition-transform active:scale-90"
-          >
-            <SkipForward className="w-9 h-9 text-white" fill="currentColor" />
+          <button onClick={nextTrack} className="p-2">
+            <SkipForward className="w-8 h-8 text-white" fill="currentColor" />
           </button>
 
-          <button className="p-3 text-white/60 transition-all active:scale-90">
-            <Timer className="w-6 h-6" />
+          <button
+            onClick={toggleRepeat}
+            className={`p-3 ${repeat !== 'off' ? 'text-primary' : 'text-white/50'}`}
+          >
+            <Repeat className="w-5 h-5" />
+            {repeat === 'one' && (
+              <span className="absolute text-[8px] font-bold">1</span>
+            )}
           </button>
         </div>
 
         {/* Bottom Actions */}
-        <div className="flex items-center justify-between py-2">
+        <div className="flex items-center justify-around py-2">
           <button 
             onClick={() => setShowLyrics(!showLyrics)}
-            className="p-2 text-white/60 hover:text-white transition-colors"
+            className={`flex flex-col items-center gap-1 ${showLyrics ? 'text-primary' : 'text-white/50'}`}
           >
-            <Disc3 className="w-6 h-6" />
+            <Mic2 className="w-5 h-5" />
+            <span className="text-[10px]">Paroles</span>
           </button>
-          <button className="p-2 text-white/60 hover:text-white transition-colors">
-            <Share2 className="w-6 h-6" />
+          <button className="flex flex-col items-center gap-1 text-white/50">
+            <Share2 className="w-5 h-5" />
+            <span className="text-[10px]">Partager</span>
           </button>
-          <button className="p-2 text-white/60 hover:text-white transition-colors">
-            <ListMusic className="w-6 h-6" />
+          <button className="flex flex-col items-center gap-1 text-white/50">
+            <ListMusic className="w-5 h-5" />
+            <span className="text-[10px]">File</span>
           </button>
         </div>
 
-        {/* Lyrics Preview Card */}
+        {/* Lyrics Card */}
         {showLyrics && (
           <div 
-            className="mt-4 bg-gradient-to-r from-red-500 to-pink-500 rounded-2xl p-5 animate-fade-in cursor-pointer"
+            className="mt-3 bg-white/10 backdrop-blur-lg rounded-2xl p-4 animate-fade-in max-h-40 overflow-hidden"
             onClick={() => setShowLyrics(false)}
           >
-            <h3 className="text-lg font-bold text-white mb-3">Aperçu des paroles</h3>
+            <div className="flex items-center gap-2 mb-3">
+              <Mic2 className="w-4 h-4 text-primary" />
+              <span className="text-xs font-semibold text-primary">Paroles</span>
+            </div>
             <div className="space-y-2">
-              {lyrics.slice(Math.max(0, currentLyricIndex - 1), currentLyricIndex + 3).map((lyric, i) => (
-                <p 
-                  key={lyric.time}
-                  className={`text-base transition-all ${
-                    lyrics[currentLyricIndex] === lyric 
-                      ? 'text-white font-bold text-lg' 
-                      : 'text-white/60'
-                  }`}
-                >
-                  {lyric.text}
-                </p>
-              ))}
+              {lyrics.slice(Math.max(0, currentLyricIndex - 1), currentLyricIndex + 4).map((lyric, i) => {
+                const isActive = lyrics[currentLyricIndex] === lyric;
+                return (
+                  <p 
+                    key={lyric.time}
+                    className={`text-sm transition-all duration-300 ${
+                      isActive 
+                        ? 'text-white font-bold text-base' 
+                        : 'text-white/40'
+                    }`}
+                  >
+                    {lyric.text}
+                  </p>
+                );
+              })}
             </div>
           </div>
         )}

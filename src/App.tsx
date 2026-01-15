@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import { MusicProvider } from "@/contexts/MusicContext";
 import BottomNav from "@/components/BottomNav";
 import MiniPlayer from "@/components/MiniPlayer";
+import WelcomeScreen from "@/components/WelcomeScreen";
 import Index from "./pages/Index";
 import Player from "./pages/Player";
 import Library from "./pages/Library";
@@ -16,15 +17,22 @@ import Notifications from "./pages/Notifications";
 import PlaylistDetail from "./pages/PlaylistDetail";
 import Subscription from "./pages/Subscription";
 import NotFound from "./pages/NotFound";
+import { useState } from "react";
 
 const queryClient = new QueryClient();
 
 const AppContent = () => {
   const location = useLocation();
+  const [welcomeComplete, setWelcomeComplete] = useState(() => {
+    return localStorage.getItem('musicflow_welcome_seen') === 'true';
+  });
   const hideNav = ['/player', '/subscription'].includes(location.pathname);
 
   return (
     <div className="max-w-lg mx-auto min-h-screen relative overflow-x-hidden">
+      {!welcomeComplete && (
+        <WelcomeScreen onComplete={() => setWelcomeComplete(true)} />
+      )}
       <Routes>
         <Route path="/" element={<Index />} />
         <Route path="/player" element={<Player />} />
@@ -37,7 +45,7 @@ const AppContent = () => {
         <Route path="/subscription" element={<Subscription />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
-      {!hideNav && (
+      {!hideNav && welcomeComplete && (
         <>
           <MiniPlayer />
           <BottomNav />

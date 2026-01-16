@@ -1,38 +1,52 @@
-import { Home, Search, Bookmark, User } from 'lucide-react';
+import { Home, Search, Plus, LayoutGrid } from 'lucide-react';
 import { useLocation, useNavigate } from 'react-router-dom';
-
-const navItems = [
-  { icon: Home, path: '/' },
-  { icon: Search, path: '/search' },
-  { icon: Bookmark, path: '/library' },
-  { icon: User, path: '/profile' },
-];
 
 const BottomNav = () => {
   const location = useLocation();
   const navigate = useNavigate();
 
+  const navItems = [
+    { icon: Home, path: '/', label: 'Accueil' },
+    { icon: Search, path: '/search', label: 'Découvrir' },
+    { icon: LayoutGrid, path: '/library', label: 'Collection' },
+  ];
+
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 bg-black/90 backdrop-blur-xl safe-area-bottom">
-      <div className="flex justify-around items-center h-14 px-8 max-w-lg mx-auto">
-        {navItems.map(({ icon: Icon, path }) => {
-          const isActive = location.pathname === path;
-          return (
+    <nav className="fixed bottom-0 left-0 right-0 z-50 safe-area-bottom">
+      <div className="mx-4 mb-4">
+        <div className="bg-card/90 backdrop-blur-xl rounded-full border border-white/10 py-3 px-6">
+          <div className="flex justify-around items-center">
+            {navItems.map(({ icon: Icon, path, label }) => {
+              const isActive = location.pathname === path;
+              return (
+                <button
+                  key={path}
+                  onClick={() => navigate(path)}
+                  className="flex flex-col items-center gap-1 px-4"
+                >
+                  <Icon
+                    className={`w-6 h-6 transition-all ${
+                      isActive ? 'text-foreground' : 'text-muted-foreground'
+                    }`}
+                    strokeWidth={isActive ? 2 : 1.5}
+                    fill={isActive ? 'currentColor' : 'none'}
+                  />
+                  <span className={`text-[10px] ${isActive ? 'text-foreground' : 'text-muted-foreground'}`}>
+                    {label}
+                  </span>
+                </button>
+              );
+            })}
+
+            {/* Bouton central (+) */}
             <button
-              key={path}
-              onClick={() => navigate(path)}
-              className="flex items-center justify-center p-3 transition-all duration-200"
+              onClick={() => navigate('/library')}
+              className="w-12 h-12 -mt-8 rounded-full bg-white flex items-center justify-center shadow-lg border-4 border-background"
             >
-              <Icon
-                className={`w-6 h-6 transition-all duration-200 ${
-                  isActive ? 'text-white' : 'text-white/40'
-                }`}
-                strokeWidth={isActive ? 2 : 1.5}
-                fill={isActive ? 'white' : 'none'}
-              />
+              <Plus className="w-6 h-6 text-black" strokeWidth={2.5} />
             </button>
-          );
-        })}
+          </div>
+        </div>
       </div>
     </nav>
   );

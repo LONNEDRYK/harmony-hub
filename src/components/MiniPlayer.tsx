@@ -1,4 +1,4 @@
-import { Play, Pause } from 'lucide-react';
+import { Pause, Play, Plus } from 'lucide-react';
 import { useMusic } from '@/contexts/MusicContext';
 import { useNavigate } from 'react-router-dom';
 
@@ -9,37 +9,48 @@ const MiniPlayer = () => {
   if (!currentTrack) return null;
 
   return (
-    <div className="fixed bottom-24 left-0 right-0 z-40 px-4">
+    <div className="fixed bottom-[88px] left-0 right-0 z-40 px-4">
       <div
-        className="bg-card/95 backdrop-blur-xl rounded-2xl border border-white/10 p-3 flex items-center gap-3 cursor-pointer shadow-lg"
+        className="w-full rounded-full border border-border/50 bg-card/60 backdrop-blur-sm px-3 py-2.5 shadow-lg flex items-center gap-2 cursor-pointer"
         onClick={() => navigate('/player')}
+        role="button"
+        tabIndex={0}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') navigate('/player');
+        }}
       >
-        {/* Album art */}
-        <img
-          src={currentTrack.cover}
-          alt={currentTrack.title}
-          className="w-12 h-12 rounded-xl object-cover"
-        />
-        
-        {/* Info */}
-        <div className="flex-1 min-w-0">
-          <p className="font-medium text-sm truncate">{currentTrack.title}</p>
-          <p className="text-xs text-muted-foreground truncate">{currentTrack.artist}</p>
-        </div>
-
-        {/* Play/Pause button */}
+        {/* Play/Pause */}
         <button
           onClick={(e) => {
             e.stopPropagation();
             togglePlay();
           }}
-          className="w-10 h-10 rounded-full bg-white flex items-center justify-center flex-shrink-0"
+          className="w-10 h-10 rounded-full bg-primary text-primary-foreground flex items-center justify-center flex-shrink-0"
+          aria-label={isPlaying ? 'Pause' : 'Play'}
         >
           {isPlaying ? (
-            <Pause className="w-5 h-5 text-black" fill="currentColor" />
+            <Pause className="w-5 h-5" fill="currentColor" />
           ) : (
-            <Play className="w-5 h-5 text-black ml-0.5" fill="currentColor" />
+            <Play className="w-5 h-5 ml-0.5" fill="currentColor" />
           )}
+        </button>
+
+        {/* Info */}
+        <div className="flex-1 min-w-0">
+          <p className="text-sm font-medium truncate text-foreground/95">{currentTrack.title}</p>
+          <p className="text-xs truncate text-muted-foreground">{currentTrack.artist}</p>
+        </div>
+
+        {/* + action (comme sur l'image) */}
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            navigate('/library');
+          }}
+          className="w-10 h-10 rounded-full border border-border/60 bg-background/10 flex items-center justify-center flex-shrink-0"
+          aria-label="Ajouter"
+        >
+          <Plus className="w-5 h-5 text-foreground/80" />
         </button>
       </div>
     </div>

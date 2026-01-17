@@ -130,4 +130,14 @@
   .animate-fade-in {
     animation: fade-in 0.2s ease-out;
   }
+
+  /* Safe-area helpers (iOS) */
+  .pt-safe {
+    padding-top: env(safe-area-inset-top);
+  }
+
+  .safe-area-bottom {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
 }
+

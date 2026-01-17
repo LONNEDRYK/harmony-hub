@@ -1,4 +1,5 @@
 import { useLocation, useNavigate } from 'react-router-dom';
+import { Plus } from 'lucide-react';
 
 const BottomNav = () => {
   const location = useLocation();
@@ -11,38 +12,49 @@ const BottomNav = () => {
   ] as const;
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 bg-background/90 backdrop-blur-sm border-t border-border/40 safe-area-bottom">
-      <div className="px-6 pt-4 pb-6">
-        <div className="mx-auto grid max-w-xs grid-cols-3 items-end">
-          {items.map((item) => {
-            const active = location.pathname === item.path;
-            const Icon = item.icon;
+    <nav className="fixed bottom-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-md border-t border-border/30 safe-area-bottom">
+      <div className="px-4 pt-3 pb-5 max-w-lg mx-auto">
+        <div className="flex items-center justify-between">
+          {/* Nav Items */}
+          <div className="flex items-center gap-6">
+            {items.map((item) => {
+              const active = location.pathname === item.path;
+              const Icon = item.icon;
 
-            return (
-              <button
-                key={item.path}
-                onClick={() => navigate(item.path)}
-                className="flex flex-col items-center gap-1"
-                aria-current={active ? 'page' : undefined}
-              >
-                <Icon className={active ? 'text-foreground' : 'text-muted-foreground'} />
-                <span className={active ? 'text-[11px] text-foreground' : 'text-[11px] text-muted-foreground'}>
-                  {item.label}
-                </span>
-              </button>
-            );
-          })}
+              return (
+                <button
+                  key={item.path}
+                  onClick={() => navigate(item.path)}
+                  className="flex flex-col items-center gap-0.5"
+                  aria-current={active ? 'page' : undefined}
+                >
+                  <Icon active={active} />
+                  <span className={`text-[10px] font-medium ${active ? 'text-foreground' : 'text-muted-foreground'}`}>
+                    {item.label}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Add Button */}
+          <button
+            onClick={() => navigate('/library')}
+            className="w-11 h-11 rounded-full bg-primary flex items-center justify-center shadow-lg shadow-primary/20"
+          >
+            <Plus className="w-5 h-5 text-primary-foreground" />
+          </button>
         </div>
       </div>
     </nav>
   );
 };
 
-function HomeIcon({ className }: { className?: string }) {
+function HomeIcon({ active }: { active?: boolean }) {
   return (
     <svg
       viewBox="0 0 24 24"
-      className={"h-7 w-7 " + (className ?? '')}
+      className={`h-6 w-6 ${active ? 'text-foreground' : 'text-muted-foreground'}`}
       fill="none"
       stroke="currentColor"
       strokeWidth={1.5}
@@ -54,11 +66,11 @@ function HomeIcon({ className }: { className?: string }) {
   );
 }
 
-function SearchIcon({ className }: { className?: string }) {
+function SearchIcon({ active }: { active?: boolean }) {
   return (
     <svg
       viewBox="0 0 24 24"
-      className={"h-7 w-7 " + (className ?? '')}
+      className={`h-6 w-6 ${active ? 'text-foreground' : 'text-muted-foreground'}`}
       fill="none"
       stroke="currentColor"
       strokeWidth={1.5}
@@ -71,11 +83,11 @@ function SearchIcon({ className }: { className?: string }) {
   );
 }
 
-function LibraryIcon({ className }: { className?: string }) {
+function LibraryIcon({ active }: { active?: boolean }) {
   return (
     <svg
       viewBox="0 0 24 24"
-      className={"h-7 w-7 " + (className ?? '')}
+      className={`h-6 w-6 ${active ? 'text-foreground' : 'text-muted-foreground'}`}
       fill="none"
       stroke="currentColor"
       strokeWidth={2}

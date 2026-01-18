@@ -9,11 +9,8 @@ import {
   SkipForward,
   Shuffle,
   Repeat,
-  Share2,
   ListMusic,
-  Mic2,
-  Camera,
-  Volume2
+  Sliders
 } from 'lucide-react';
 import { useMusic } from '@/contexts/MusicContext';
 import { useState, useEffect, useRef } from 'react';
@@ -46,7 +43,6 @@ const Player = () => {
   const [showOptions, setShowOptions] = useState(false);
   const [showLyrics, setShowLyrics] = useState(false);
   const [currentLyricIndex, setCurrentLyricIndex] = useState(0);
-  const coverInputRef = useRef<HTMLInputElement>(null);
   
   const {
     currentTrack,
@@ -92,26 +88,24 @@ const Player = () => {
     seek(percent * currentTrack.duration);
   };
 
-  const handleCoverChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      console.log('New cover:', file);
-    }
-  };
-
   return (
-    <div className="h-screen flex flex-col bg-black relative overflow-hidden">
-      {/* Album Art Background Blur */}
-      <div 
-        className="absolute inset-0 opacity-40"
-        style={{
-          backgroundImage: `url(${currentTrack.cover})`,
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
-          filter: 'blur(80px) saturate(1.5)',
-        }}
-      />
-      <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-black/80 to-black" />
+    <div className="h-screen flex flex-col relative overflow-hidden">
+      {/* Blue gradient background with wave effect */}
+      <div className="absolute inset-0 bg-gradient-to-b from-sky-400 via-blue-500 to-blue-700">
+        {/* Wave blur elements */}
+        <div className="absolute inset-0 overflow-hidden">
+          <div className="absolute top-0 left-0 right-0 h-1/3 bg-gradient-to-b from-sky-300/40 to-transparent blur-3xl" />
+          <div className="absolute top-20 -left-20 w-96 h-96 bg-white/10 rounded-full blur-3xl animate-pulse" />
+          <div className="absolute top-40 -right-20 w-80 h-80 bg-blue-300/20 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }} />
+          <div className="absolute bottom-40 left-10 w-64 h-64 bg-cyan-400/15 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '2s' }} />
+          <div className="absolute bottom-20 right-10 w-72 h-72 bg-sky-200/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '0.5s' }} />
+          
+          {/* Horizontal blur lines like waves */}
+          <div className="absolute top-1/4 left-0 right-0 h-px bg-white/10 blur-sm" />
+          <div className="absolute top-1/3 left-0 right-0 h-px bg-white/5 blur-md" />
+          <div className="absolute top-1/2 left-0 right-0 h-px bg-white/5 blur-lg" />
+        </div>
+      </div>
 
       {/* Content */}
       <div className="relative flex-1 flex flex-col px-6 pt-safe">
@@ -124,11 +118,8 @@ const Player = () => {
             <ChevronDown className="w-6 h-6 text-white" />
           </button>
           <div className="text-center flex-1 px-4">
-            <p className="text-[10px] text-white/50 uppercase tracking-[0.2em] font-medium">
-              En lecture
-            </p>
-            <p className="text-xs text-white/80 font-medium mt-0.5 truncate">
-              {currentTrack.album || 'Ma Bibliothèque'}
+            <p className="text-[10px] text-white/60 uppercase tracking-[0.2em] font-medium">
+              Now Playing
             </p>
           </div>
           <button 
@@ -141,27 +132,14 @@ const Player = () => {
 
         {/* Album Art */}
         <div className="flex-1 flex items-center justify-center py-4 min-h-0">
-          <div className="relative w-full max-w-[300px] aspect-square">
+          <div className="relative w-full max-w-[280px] aspect-square">
             <img
               src={currentTrack.cover}
               alt={currentTrack.title}
-              className="w-full h-full rounded-[32px] object-cover shadow-2xl"
+              className="w-full h-full rounded-3xl object-cover shadow-2xl"
               style={{
-                boxShadow: '0 30px 60px -15px rgba(0,0,0,0.8)',
+                boxShadow: '0 30px 80px -15px rgba(0,0,0,0.5)',
               }}
-            />
-            <button
-              onClick={() => coverInputRef.current?.click()}
-              className="absolute bottom-4 right-4 w-11 h-11 rounded-full bg-black/50 backdrop-blur-xl border border-white/20 flex items-center justify-center active:scale-90 transition-transform"
-            >
-              <Camera className="w-5 h-5 text-white/80" />
-            </button>
-            <input
-              ref={coverInputRef}
-              type="file"
-              accept="image/*"
-              onChange={handleCoverChange}
-              className="hidden"
             />
           </div>
         </div>
@@ -170,17 +148,26 @@ const Player = () => {
         <div className="flex items-center justify-between py-4">
           <div className="flex-1 min-w-0 pr-4">
             <h1 className="text-2xl font-bold text-white truncate">{currentTrack.title}</h1>
-            <p className="text-white/50 text-base truncate">{currentTrack.artist}</p>
+            <p className="text-white/60 text-base truncate">{currentTrack.artist}</p>
           </div>
           <button
             onClick={() => toggleFavorite(currentTrack.id)}
-            className="w-12 h-12 rounded-full bg-white/10 flex items-center justify-center active:scale-90 transition-transform"
+            className="w-10 h-10 flex items-center justify-center"
           >
             <Heart 
-              className={`w-6 h-6 ${currentTrack.isFavorite ? 'text-red-500 fill-red-500' : 'text-white/60'}`}
+              className={`w-6 h-6 ${currentTrack.isFavorite ? 'text-red-400 fill-red-400' : 'text-white/60'}`}
             />
           </button>
         </div>
+
+        {/* Lyrics Preview */}
+        {showLyrics && lyrics[currentLyricIndex] && (
+          <div className="py-2">
+            <p className="text-white/80 text-sm text-center italic">
+              {lyrics[currentLyricIndex].text}
+            </p>
+          </div>
+        )}
 
         {/* Progress Bar */}
         <div className="py-3">
@@ -193,26 +180,26 @@ const Player = () => {
               style={{ width: `${progress}%` }}
             />
           </div>
-          <div className="flex justify-between text-xs text-white/40 mt-2 font-medium">
+          <div className="flex justify-between text-xs text-white/50 mt-2 font-medium">
             <span>{formatTime(currentTime)}</span>
             <span>{formatTime(currentTrack.duration)}</span>
           </div>
         </div>
 
         {/* Main Controls */}
-        <div className="flex items-center justify-between py-4">
+        <div className="flex items-center justify-between py-6">
           <button
             onClick={toggleShuffle}
-            className={`w-12 h-12 rounded-full flex items-center justify-center ${shuffle ? 'bg-primary/20 text-primary' : 'text-white/40'}`}
+            className={`w-10 h-10 rounded-full flex items-center justify-center ${shuffle ? 'text-white' : 'text-white/40'}`}
           >
             <Shuffle className="w-5 h-5" />
           </button>
 
           <button 
             onClick={prevTrack} 
-            className="w-14 h-14 rounded-full bg-white/10 flex items-center justify-center active:scale-90 transition-transform"
+            className="w-14 h-14 flex items-center justify-center"
           >
-            <SkipBack className="w-6 h-6 text-white" fill="currentColor" />
+            <SkipBack className="w-8 h-8 text-white" fill="currentColor" />
           </button>
 
           <button
@@ -220,22 +207,22 @@ const Player = () => {
             className="w-20 h-20 rounded-full bg-white flex items-center justify-center shadow-2xl active:scale-95 transition-transform"
           >
             {isPlaying ? (
-              <Pause className="w-8 h-8 text-black" fill="currentColor" />
+              <Pause className="w-9 h-9 text-blue-600" fill="currentColor" />
             ) : (
-              <Play className="w-8 h-8 text-black ml-1" fill="currentColor" />
+              <Play className="w-9 h-9 text-blue-600 ml-1" fill="currentColor" />
             )}
           </button>
 
           <button 
             onClick={nextTrack} 
-            className="w-14 h-14 rounded-full bg-white/10 flex items-center justify-center active:scale-90 transition-transform"
+            className="w-14 h-14 flex items-center justify-center"
           >
-            <SkipForward className="w-6 h-6 text-white" fill="currentColor" />
+            <SkipForward className="w-8 h-8 text-white" fill="currentColor" />
           </button>
 
           <button
             onClick={toggleRepeat}
-            className={`w-12 h-12 rounded-full flex items-center justify-center relative ${repeat !== 'off' ? 'bg-primary/20 text-primary' : 'text-white/40'}`}
+            className={`w-10 h-10 rounded-full flex items-center justify-center relative ${repeat !== 'off' ? 'text-white' : 'text-white/40'}`}
           >
             <Repeat className="w-5 h-5" />
             {repeat === 'one' && (
@@ -245,44 +232,24 @@ const Player = () => {
         </div>
 
         {/* Bottom Actions */}
-        <div className="flex items-center justify-center gap-8 py-4 pb-safe">
+        <div className="flex items-center justify-center gap-12 py-4 pb-safe">
           <button 
             onClick={() => setShowLyrics(!showLyrics)}
-            className={`flex flex-col items-center gap-1.5 ${showLyrics ? 'text-primary' : 'text-white/40'}`}
+            className={`flex flex-col items-center gap-1 ${showLyrics ? 'text-white' : 'text-white/50'}`}
           >
-            <div className={`w-10 h-10 rounded-full flex items-center justify-center ${showLyrics ? 'bg-primary/20' : 'bg-white/10'}`}>
-              <Mic2 className="w-5 h-5" />
-            </div>
-            <span className="text-[10px] font-medium">Paroles</span>
+            <Sliders className="w-5 h-5" />
           </button>
           
-          <button className="flex flex-col items-center gap-1.5 text-white/40">
-            <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center">
-              <Volume2 className="w-5 h-5" />
-            </div>
-            <span className="text-[10px] font-medium">Volume</span>
-          </button>
-          
-          <button className="flex flex-col items-center gap-1.5 text-white/40">
-            <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center">
-              <Share2 className="w-5 h-5" />
-            </div>
-            <span className="text-[10px] font-medium">Partager</span>
-          </button>
-          
-          <button className="flex flex-col items-center gap-1.5 text-white/40">
-            <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center">
-              <ListMusic className="w-5 h-5" />
-            </div>
-            <span className="text-[10px] font-medium">File</span>
+          <button className="flex flex-col items-center gap-1 text-white/50">
+            <ListMusic className="w-5 h-5" />
           </button>
         </div>
       </div>
 
-      {/* Lyrics Overlay */}
+      {/* Full Lyrics Overlay */}
       {showLyrics && (
         <div 
-          className="absolute inset-0 bg-black/95 backdrop-blur-xl flex flex-col z-40 animate-fade-in"
+          className="absolute inset-0 bg-blue-900/95 backdrop-blur-xl flex flex-col z-40 animate-fade-in"
           onClick={() => setShowLyrics(false)}
         >
           <div className="flex items-center justify-between p-6 pt-safe">
@@ -292,10 +259,7 @@ const Player = () => {
             >
               <ChevronDown className="w-6 h-6 text-white" />
             </button>
-            <div className="flex items-center gap-2">
-              <Mic2 className="w-5 h-5 text-primary" />
-              <span className="font-semibold">Paroles</span>
-            </div>
+            <span className="font-semibold text-white">Lyrics</span>
             <div className="w-10" />
           </div>
           
@@ -327,8 +291,8 @@ const Player = () => {
             </div>
           </div>
 
-          {/* Mini Player */}
-          <div className="absolute bottom-0 left-0 right-0 p-6 pb-safe bg-gradient-to-t from-black to-transparent">
+          {/* Mini Player in Lyrics View */}
+          <div className="absolute bottom-0 left-0 right-0 p-6 pb-safe bg-gradient-to-t from-blue-900 to-transparent">
             <div className="flex items-center gap-4">
               <button
                 onClick={(e) => {
@@ -338,15 +302,15 @@ const Player = () => {
                 className="w-14 h-14 rounded-full bg-white flex items-center justify-center"
               >
                 {isPlaying ? (
-                  <Pause className="w-6 h-6 text-black" fill="currentColor" />
+                  <Pause className="w-6 h-6 text-blue-600" fill="currentColor" />
                 ) : (
-                  <Play className="w-6 h-6 text-black ml-0.5" fill="currentColor" />
+                  <Play className="w-6 h-6 text-blue-600 ml-0.5" fill="currentColor" />
                 )}
               </button>
               <div className="flex-1">
                 <div className="h-1 bg-white/20 rounded-full overflow-hidden">
                   <div
-                    className="h-full bg-primary rounded-full"
+                    className="h-full bg-white rounded-full"
                     style={{ width: `${progress}%` }}
                   />
                 </div>

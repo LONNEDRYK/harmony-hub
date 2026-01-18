@@ -1,4 +1,4 @@
-import { Play, Pause, MoreVertical } from 'lucide-react';
+import { Play, Pause, MoreVertical, Camera } from 'lucide-react';
 import { Track, useMusic } from '@/contexts/MusicContext';
 import { useState } from 'react';
 import TrackOptionsSheet from './TrackOptionsSheet';
@@ -6,9 +6,10 @@ import TrackOptionsSheet from './TrackOptionsSheet';
 interface TrackCardProps {
   track: Track;
   variant?: 'grid' | 'list';
+  onEditCover?: () => void;
 }
 
-const TrackCard = ({ track, variant = 'grid' }: TrackCardProps) => {
+const TrackCard = ({ track, variant = 'grid', onEditCover }: TrackCardProps) => {
   const { playTrack, currentTrack, isPlaying, togglePlay } = useMusic();
   const [showOptions, setShowOptions] = useState(false);
 
@@ -30,7 +31,7 @@ const TrackCard = ({ track, variant = 'grid' }: TrackCardProps) => {
             isCurrentTrack ? 'bg-primary/10' : 'hover:bg-white/5'
           }`}
         >
-          <div className="relative w-14 h-14 rounded-lg overflow-hidden flex-shrink-0">
+          <div className="relative w-12 h-12 rounded-lg overflow-hidden flex-shrink-0 group">
             <img
               src={track.cover}
               alt={track.title}
@@ -46,13 +47,24 @@ const TrackCard = ({ track, variant = 'grid' }: TrackCardProps) => {
                 <Play className="w-5 h-5 ml-0.5" fill="currentColor" />
               )}
             </button>
+            {onEditCover && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onEditCover();
+                }}
+                className="absolute bottom-0.5 right-0.5 w-5 h-5 rounded-full bg-black/60 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+              >
+                <Camera className="w-3 h-3" />
+              </button>
+            )}
           </div>
 
           <div className="flex-1 min-w-0" onClick={handlePlay}>
-            <p className={`font-medium truncate ${isCurrentTrack ? 'text-primary' : ''}`}>
+            <p className={`font-medium truncate text-sm ${isCurrentTrack ? 'text-primary' : ''}`}>
               {track.title}
             </p>
-            <p className="text-sm text-muted-foreground truncate">{track.artist}</p>
+            <p className="text-xs text-muted-foreground truncate">{track.artist}</p>
           </div>
 
           <button
@@ -74,7 +86,7 @@ const TrackCard = ({ track, variant = 'grid' }: TrackCardProps) => {
 
   return (
     <>
-      <div className="group flex-shrink-0 w-36">
+      <div className="group flex-shrink-0">
         <div className="relative aspect-square rounded-xl overflow-hidden mb-2">
           <img
             src={track.cover}
@@ -83,6 +95,19 @@ const TrackCard = ({ track, variant = 'grid' }: TrackCardProps) => {
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
           
+          {/* Edit Cover Button */}
+          {onEditCover && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onEditCover();
+              }}
+              className="absolute top-2 left-2 w-8 h-8 rounded-full bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+            >
+              <Camera className="w-4 h-4" />
+            </button>
+          )}
+
           {/* More Options Button */}
           <button
             onClick={() => setShowOptions(true)}

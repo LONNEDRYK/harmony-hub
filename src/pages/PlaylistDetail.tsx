@@ -7,12 +7,11 @@ import {
   MoreVertical, 
   Shuffle,
   Heart,
-  Share2,
-  Edit3,
   Trash2,
   Camera,
   Music,
-  GripVertical
+  GripVertical,
+  Image
 } from 'lucide-react';
 import { useMusic, Track } from '@/contexts/MusicContext';
 import TrackOptionsSheet from '@/components/TrackOptionsSheet';
@@ -28,13 +27,15 @@ const PlaylistDetail = () => {
     currentTrack, 
     togglePlay,
     removeFromPlaylist,
-    deletePlaylist 
+    deletePlaylist,
+    updatePlaylistCover
   } = useMusic();
   
   const [showOptions, setShowOptions] = useState(false);
   const [selectedTrack, setSelectedTrack] = useState<Track | null>(null);
-  const [showEditCover, setShowEditCover] = useState(false);
-  const coverInputRef = useRef<HTMLInputElement>(null);
+  const [showCameraModal, setShowCameraModal] = useState(false);
+  const cameraInputRef = useRef<HTMLInputElement>(null);
+  const galleryInputRef = useRef<HTMLInputElement>(null);
 
   const playlist = playlists.find(p => p.id === id);
   
@@ -42,12 +43,12 @@ const PlaylistDetail = () => {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <p className="text-muted-foreground">Playlist non trouvée</p>
+          <p className="text-muted-foreground">Playlist not found</p>
           <button 
             onClick={() => navigate('/library')}
             className="mt-4 px-6 py-3 rounded-full bg-primary text-primary-foreground"
           >
-            Retour
+            Go back
           </button>
         </div>
       </div>
@@ -68,23 +69,33 @@ const PlaylistDetail = () => {
     }
   };
 
-  const handleCoverChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleCameraCapture = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
-      // In a real app, you'd update the playlist cover
-      console.log('New cover:', file);
+    if (file && id) {
+      const url = URL.createObjectURL(file);
+      updatePlaylistCover(id, url);
     }
+    setShowCameraModal(false);
+  };
+
+  const handleGallerySelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file && id) {
+      const url = URL.createObjectURL(file);
+      updatePlaylistCover(id, url);
+    }
+    setShowCameraModal(false);
   };
 
   const handleDeletePlaylist = () => {
-    if (confirm('Supprimer cette playlist ?')) {
+    if (confirm('Delete this playlist?')) {
       deletePlaylist(playlist.id);
       navigate('/library');
     }
   };
 
   return (
-    <div className="min-h-screen bg-background overflow-hidden">
+    <div className="min-h-screen bg-background overflow-hidden pb-36">
       {/* Header with Cover */}
       <div className="relative">
         <div className="h-72 relative">
@@ -105,25 +116,18 @@ const PlaylistDetail = () => {
 
           {/* Edit Cover */}
           <button
-            onClick={() => coverInputRef.current?.click()}
+            onClick={() => setShowCameraModal(true)}
             className="absolute top-safe right-5 mt-4 w-10 h-10 rounded-full bg-black/50 backdrop-blur flex items-center justify-center"
           >
             <Camera className="w-5 h-5 text-white" />
           </button>
-          <input
-            ref={coverInputRef}
-            type="file"
-            accept="image/*"
-            onChange={handleCoverChange}
-            className="hidden"
-          />
         </div>
 
         {/* Playlist Info */}
         <div className="px-5 -mt-20 relative z-10">
           <h1 className="text-3xl font-bold mb-2">{playlist.name}</h1>
           <p className="text-muted-foreground">
-            {playlistTracks.length} morceaux • {hours > 0 ? `${hours}h ` : ''}{minutes} min
+            {playlistTracks.length} tracks • {hours > 0 ? `${hours}h ` : ''}{minutes} min
           </p>
         </div>
       </div>
@@ -136,7 +140,7 @@ const PlaylistDetail = () => {
           className="flex-1 flex items-center justify-center gap-2 py-4 rounded-2xl bg-primary text-primary-foreground font-semibold disabled:opacity-50"
         >
           <Play className="w-5 h-5" fill="currentColor" />
-          Lecture
+          Play
         </button>
         <button className="w-14 h-14 rounded-2xl bg-white/10 flex items-center justify-center">
           <Shuffle className="w-5 h-5" />
@@ -150,7 +154,7 @@ const PlaylistDetail = () => {
       </div>
 
       {/* Tracks List */}
-      <div className="px-5 pb-36">
+      <div className="px-5">
         {playlistTracks.length > 0 ? (
           <div className="space-y-2">
             {playlistTracks.map((track, index) => (
@@ -201,19 +205,75 @@ const PlaylistDetail = () => {
             <div className="w-20 h-20 rounded-full bg-white/5 flex items-center justify-center mx-auto mb-4">
               <Music className="w-8 h-8 text-muted-foreground" />
             </div>
-            <h3 className="text-lg font-semibold mb-2">Playlist vide</h3>
+            <h3 className="text-lg font-semibold mb-2">Empty playlist</h3>
             <p className="text-muted-foreground mb-4">
-              Ajoutez des morceaux depuis la bibliothèque
+              Add tracks from your library
             </p>
             <button
               onClick={() => navigate('/library')}
               className="px-6 py-3 rounded-full bg-primary text-primary-foreground font-semibold"
             >
-              Parcourir la bibliothèque
+              Browse library
             </button>
           </div>
         )}
       </div>
+
+      {/* Camera/Gallery Modal */}
+      {showCameraModal && (
+        <div className="fixed inset-0 z-50 flex items-end justify-center">
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setShowCameraModal(false)} />
+          <div className="relative bg-zinc-900 rounded-t-3xl p-6 w-full max-w-lg animate-slide-up">
+            <div className="w-10 h-1 bg-white/20 rounded-full mx-auto mb-6" />
+            <h3 className="text-lg font-bold mb-6 text-center">Change cover</h3>
+            
+            <div className="grid grid-cols-2 gap-4 mb-6">
+              <button
+                onClick={() => cameraInputRef.current?.click()}
+                className="flex flex-col items-center gap-3 p-6 bg-white/5 rounded-2xl hover:bg-white/10 transition-colors"
+              >
+                <div className="w-14 h-14 rounded-full bg-blue-500/20 flex items-center justify-center">
+                  <Camera className="w-7 h-7 text-blue-500" />
+                </div>
+                <span className="font-medium">Camera</span>
+              </button>
+              
+              <button
+                onClick={() => galleryInputRef.current?.click()}
+                className="flex flex-col items-center gap-3 p-6 bg-white/5 rounded-2xl hover:bg-white/10 transition-colors"
+              >
+                <div className="w-14 h-14 rounded-full bg-purple-500/20 flex items-center justify-center">
+                  <Image className="w-7 h-7 text-purple-500" />
+                </div>
+                <span className="font-medium">Gallery</span>
+              </button>
+            </div>
+
+            <button
+              onClick={() => setShowCameraModal(false)}
+              className="w-full py-4 rounded-xl bg-white/5 text-muted-foreground font-medium"
+            >
+              Cancel
+            </button>
+
+            <input
+              ref={cameraInputRef}
+              type="file"
+              accept="image/*"
+              capture="environment"
+              onChange={handleCameraCapture}
+              className="hidden"
+            />
+            <input
+              ref={galleryInputRef}
+              type="file"
+              accept="image/*"
+              onChange={handleGallerySelect}
+              className="hidden"
+            />
+          </div>
+        </div>
+      )}
 
       {/* Track Options Sheet */}
       {selectedTrack && (

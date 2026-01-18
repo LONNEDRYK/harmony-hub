@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Music, Grid3X3, List, X, Trash2, Play, MoreVertical } from 'lucide-react';
+import { Plus, Music, Grid3X3, List, X, Play, Camera, Image, ChevronLeft } from 'lucide-react';
 import { useMusic, Track } from '@/contexts/MusicContext';
 import TrackCard from '@/components/TrackCard';
 import TrackOptionsSheet from '@/components/TrackOptionsSheet';
@@ -8,7 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 const Library = () => {
   const navigate = useNavigate();
-  const { tracks, addTrack, playlists, createPlaylist, deletePlaylist, playTrack } = useMusic();
+  const { tracks, addTrack, playlists, createPlaylist, deletePlaylist, playTrack, updateTrackCover } = useMusic();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('list');
   const [sortBy, setSortBy] = useState<'recent' | 'name' | 'artist'>('recent');
@@ -16,6 +16,11 @@ const Library = () => {
   const [newPlaylistName, setNewPlaylistName] = useState('');
   const [selectedTrack, setSelectedTrack] = useState<Track | null>(null);
   const [showOptions, setShowOptions] = useState(false);
+  const [showCameraModal, setShowCameraModal] = useState(false);
+  const [cameraTarget, setCameraTarget] = useState<'track' | 'playlist' | null>(null);
+  const [targetId, setTargetId] = useState<string | null>(null);
+  const cameraInputRef = useRef<HTMLInputElement>(null);
+  const galleryInputRef = useRef<HTMLInputElement>(null);
 
   const favorites = tracks.filter((t) => t.isFavorite);
 
@@ -52,14 +57,42 @@ const Library = () => {
     }
   };
 
+  const handleOpenCamera = (target: 'track' | 'playlist', id: string) => {
+    setCameraTarget(target);
+    setTargetId(id);
+    setShowCameraModal(true);
+  };
+
+  const handleCameraCapture = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file && targetId && cameraTarget === 'track') {
+      const url = URL.createObjectURL(file);
+      updateTrackCover?.(targetId, url);
+    }
+    setShowCameraModal(false);
+    setCameraTarget(null);
+    setTargetId(null);
+  };
+
+  const handleGallerySelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file && targetId && cameraTarget === 'track') {
+      const url = URL.createObjectURL(file);
+      updateTrackCover?.(targetId, url);
+    }
+    setShowCameraModal(false);
+    setCameraTarget(null);
+    setTargetId(null);
+  };
+
   return (
     <div className="min-h-screen pb-36 bg-background overflow-hidden">
       <header className="p-5 pt-safe">
         <div className="flex items-center justify-between mb-5">
           <div>
-            <h1 className="text-2xl font-bold">Bibliothèque</h1>
+            <h1 className="text-2xl font-bold">Library</h1>
             <p className="text-muted-foreground text-sm mt-0.5">
-              {tracks.length} morceaux • {favorites.length} favoris
+              {tracks.length} tracks • {favorites.length} favorites
             </p>
           </div>
           <button
@@ -96,9 +129,9 @@ const Library = () => {
             onChange={(e) => setSortBy(e.target.value as 'recent' | 'name' | 'artist')}
             className="bg-white/5 border-0 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:ring-1 focus:ring-primary"
           >
-            <option value="recent">Récents</option>
-            <option value="name">Titre</option>
-            <option value="artist">Artiste</option>
+            <option value="recent">Recent</option>
+            <option value="name">Title</option>
+            <option value="artist">Artist</option>
           </select>
         </div>
 
@@ -118,13 +151,13 @@ const Library = () => {
             value="all" 
             className="flex-1 rounded-lg text-xs data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
           >
-            Tous ({tracks.length})
+            All ({tracks.length})
           </TabsTrigger>
           <TabsTrigger 
             value="favorites" 
             className="flex-1 rounded-lg text-xs data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
           >
-            Favoris ({favorites.length})
+            Favorites ({favorites.length})
           </TabsTrigger>
           <TabsTrigger 
             value="playlists" 
@@ -139,13 +172,22 @@ const Library = () => {
             viewMode === 'grid' ? (
               <div className="grid grid-cols-2 gap-3">
                 {sortedTracks.map((track) => (
-                  <TrackCard key={track.id} track={track} />
+                  <TrackCard 
+                    key={track.id} 
+                    track={track} 
+                    onEditCover={() => handleOpenCamera('track', track.id)}
+                  />
                 ))}
               </div>
             ) : (
               <div className="space-y-1">
                 {sortedTracks.map((track) => (
-                  <TrackCard key={track.id} track={track} variant="list" />
+                  <TrackCard 
+                    key={track.id} 
+                    track={track} 
+                    variant="list"
+                    onEditCover={() => handleOpenCamera('track', track.id)}
+                  />
                 ))}
               </div>
             )
@@ -174,7 +216,7 @@ const Library = () => {
               <div className="w-16 h-16 rounded-full bg-white/5 flex items-center justify-center mx-auto mb-4">
                 <Music className="w-7 h-7 text-muted-foreground" />
               </div>
-              <p className="text-muted-foreground text-sm">Aucun favori</p>
+              <p className="text-muted-foreground text-sm">No favorites yet</p>
             </div>
           )}
         </TabsContent>
@@ -191,12 +233,12 @@ const Library = () => {
                 >
                   <X className="w-5 h-5 text-muted-foreground" />
                 </button>
-                <h3 className="text-lg font-bold mb-4">Nouvelle playlist</h3>
+                <h3 className="text-lg font-bold mb-4">New playlist</h3>
                 <input
                   type="text"
                   value={newPlaylistName}
                   onChange={(e) => setNewPlaylistName(e.target.value)}
-                  placeholder="Nom de la playlist"
+                  placeholder="Playlist name"
                   className="w-full bg-white/10 rounded-xl px-4 py-3 text-white placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary mb-4"
                   autoFocus
                 />
@@ -205,7 +247,7 @@ const Library = () => {
                   disabled={!newPlaylistName.trim()}
                   className="w-full py-3 rounded-xl bg-primary text-primary-foreground font-semibold disabled:opacity-50"
                 >
-                  Créer
+                  Create
                 </button>
               </div>
             </div>
@@ -228,7 +270,7 @@ const Library = () => {
                   <div className="flex-1 min-w-0 text-left">
                     <p className="font-semibold text-sm truncate">{playlist.name}</p>
                     <p className="text-xs text-muted-foreground">
-                      {playlist.trackIds.length} morceaux
+                      {playlist.trackIds.length} tracks
                     </p>
                   </div>
                   <button
@@ -250,7 +292,7 @@ const Library = () => {
                 className="w-full py-3 rounded-xl border-2 border-dashed border-white/20 text-muted-foreground font-medium text-sm flex items-center justify-center gap-2 hover:border-primary hover:text-primary transition-colors"
               >
                 <Plus className="w-4 h-4" />
-                Nouvelle playlist
+                New playlist
               </button>
             </div>
           ) : (
@@ -258,20 +300,76 @@ const Library = () => {
               <div className="w-16 h-16 rounded-full bg-white/5 flex items-center justify-center mx-auto mb-4">
                 <Music className="w-7 h-7 text-muted-foreground" />
               </div>
-              <h3 className="font-semibold mb-2 text-sm">Créez votre première playlist</h3>
+              <h3 className="font-semibold mb-2 text-sm">Create your first playlist</h3>
               <p className="text-muted-foreground text-xs mb-4">
-                Organisez vos morceaux
+                Organize your tracks
               </p>
               <button 
                 onClick={() => setShowCreatePlaylist(true)}
                 className="px-5 py-2.5 rounded-full bg-primary text-primary-foreground font-semibold text-sm"
               >
-                Nouvelle playlist
+                New playlist
               </button>
             </div>
           )}
         </TabsContent>
       </Tabs>
+
+      {/* Camera/Gallery Modal */}
+      {showCameraModal && (
+        <div className="fixed inset-0 z-50 flex items-end justify-center">
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setShowCameraModal(false)} />
+          <div className="relative bg-zinc-900 rounded-t-3xl p-6 w-full max-w-lg animate-slide-up">
+            <div className="w-10 h-1 bg-white/20 rounded-full mx-auto mb-6" />
+            <h3 className="text-lg font-bold mb-6 text-center">Change cover</h3>
+            
+            <div className="grid grid-cols-2 gap-4 mb-6">
+              <button
+                onClick={() => cameraInputRef.current?.click()}
+                className="flex flex-col items-center gap-3 p-6 bg-white/5 rounded-2xl hover:bg-white/10 transition-colors"
+              >
+                <div className="w-14 h-14 rounded-full bg-blue-500/20 flex items-center justify-center">
+                  <Camera className="w-7 h-7 text-blue-500" />
+                </div>
+                <span className="font-medium">Camera</span>
+              </button>
+              
+              <button
+                onClick={() => galleryInputRef.current?.click()}
+                className="flex flex-col items-center gap-3 p-6 bg-white/5 rounded-2xl hover:bg-white/10 transition-colors"
+              >
+                <div className="w-14 h-14 rounded-full bg-purple-500/20 flex items-center justify-center">
+                  <Image className="w-7 h-7 text-purple-500" />
+                </div>
+                <span className="font-medium">Gallery</span>
+              </button>
+            </div>
+
+            <button
+              onClick={() => setShowCameraModal(false)}
+              className="w-full py-4 rounded-xl bg-white/5 text-muted-foreground font-medium"
+            >
+              Cancel
+            </button>
+
+            <input
+              ref={cameraInputRef}
+              type="file"
+              accept="image/*"
+              capture="environment"
+              onChange={handleCameraCapture}
+              className="hidden"
+            />
+            <input
+              ref={galleryInputRef}
+              type="file"
+              accept="image/*"
+              onChange={handleGallerySelect}
+              className="hidden"
+            />
+          </div>
+        </div>
+      )}
 
       {/* Track Options Sheet */}
       {selectedTrack && (
@@ -293,15 +391,15 @@ const EmptyState = ({ onImport }: { onImport: () => void }) => (
     <div className="w-20 h-20 rounded-full bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center mx-auto mb-4">
       <Music className="w-8 h-8 text-primary" />
     </div>
-    <h3 className="text-lg font-bold mb-2">Bibliothèque vide</h3>
+    <h3 className="text-lg font-bold mb-2">Library empty</h3>
     <p className="text-muted-foreground text-sm mb-5 max-w-xs mx-auto">
-      Importez vos fichiers audio MP3
+      Import your MP3 audio files
     </p>
     <button
       onClick={onImport}
       className="px-6 py-3 rounded-full bg-primary text-primary-foreground font-semibold shadow-lg shadow-primary/30"
     >
-      Importer de la musique
+      Import music
     </button>
   </div>
 );

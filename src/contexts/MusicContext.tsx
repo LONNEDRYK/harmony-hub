@@ -9,6 +9,7 @@ export interface Track {
   cover: string;
   url: string;
   isFavorite: boolean;
+  lyrics?: string;
 }
 
 export interface Playlist {
@@ -51,6 +52,8 @@ interface MusicContextType {
   addToPlaylist: (playlistId: string, trackId: string) => void;
   removeFromPlaylist: (playlistId: string, trackId: string) => void;
   updateUserProfile: (profile: Partial<UserProfile>) => void;
+  updateTrackCover: (trackId: string, coverUrl: string) => void;
+  updatePlaylistCover: (playlistId: string, coverUrl: string) => void;
   audioRef: React.RefObject<HTMLAudioElement>;
 }
 
@@ -65,22 +68,78 @@ const defaultCovers = [
 ];
 
 const defaultProfile: UserProfile = {
-  name: 'Utilisateur',
+  name: 'User',
   avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=200&h=200&fit=crop',
   banner: 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=800&h=400&fit=crop',
 };
 
+// LocalStorage keys
+const STORAGE_KEYS = {
+  TRACKS: 'music_app_tracks',
+  PLAYLISTS: 'music_app_playlists',
+  PROFILE: 'music_app_profile',
+  TRACK_URLS: 'music_app_track_urls',
+};
+
 export const MusicProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [tracks, setTracks] = useState<Track[]>([]);
+  const [tracks, setTracks] = useState<Track[]>(() => {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEYS.TRACKS);
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
+  
   const [currentTrack, setCurrentTrack] = useState<Track | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [volume, setVolumeState] = useState(0.8);
   const [shuffle, setShuffle] = useState(false);
   const [repeat, setRepeat] = useState<'off' | 'all' | 'one'>('off');
-  const [playlists, setPlaylists] = useState<Playlist[]>([]);
-  const [userProfile, setUserProfile] = useState<UserProfile>(defaultProfile);
+  
+  const [playlists, setPlaylists] = useState<Playlist[]>(() => {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEYS.PLAYLISTS);
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
+  
+  const [userProfile, setUserProfile] = useState<UserProfile>(() => {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEYS.PROFILE);
+      return saved ? JSON.parse(saved) : defaultProfile;
+    } catch {
+      return defaultProfile;
+    }
+  });
+
+  // Store track audio URLs separately (blob URLs can't be serialized)
+  const [trackUrls, setTrackUrls] = useState<Record<string, string>>(() => {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEYS.TRACK_URLS);
+      return saved ? JSON.parse(saved) : {};
+    } catch {
+      return {};
+    }
+  });
+  
   const audioRef = useRef<HTMLAudioElement>(null);
+
+  // Save to localStorage whenever data changes
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEYS.TRACKS, JSON.stringify(tracks));
+  }, [tracks]);
+
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEYS.PLAYLISTS, JSON.stringify(playlists));
+  }, [playlists]);
+
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEYS.PROFILE, JSON.stringify(userProfile));
+  }, [userProfile]);
 
   useEffect(() => {
     const audio = audioRef.current;
@@ -122,17 +181,21 @@ export const MusicProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     const fileName = file.name.replace(/\.[^/.]+$/, '');
     const parts = fileName.split(' - ');
     
+    const trackId = Date.now().toString();
+    
     const newTrack: Track = {
-      id: Date.now().toString(),
+      id: trackId,
       title: parts.length > 1 ? parts[1] : fileName,
-      artist: parts.length > 1 ? parts[0] : 'Artiste inconnu',
-      album: 'Album inconnu',
+      artist: parts.length > 1 ? parts[0] : 'Unknown artist',
+      album: 'Unknown album',
       duration: audio.duration,
       cover: defaultCovers[Math.floor(Math.random() * defaultCovers.length)],
-      url,
+      url: url,
       isFavorite: false,
     };
 
+    // Store the blob URL in memory for this session
+    setTrackUrls(prev => ({ ...prev, [trackId]: url }));
     setTracks((prev) => [...prev, newTrack]);
   };
 
@@ -142,13 +205,28 @@ export const MusicProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       setCurrentTrack(null);
       setIsPlaying(false);
     }
+    // Clean up the blob URL
+    if (trackUrls[id]) {
+      URL.revokeObjectURL(trackUrls[id]);
+      setTrackUrls(prev => {
+        const updated = { ...prev };
+        delete updated[id];
+        return updated;
+      });
+    }
   };
 
   const playTrack = (track: Track) => {
-    setCurrentTrack(track);
+    // Use stored URL if available, otherwise use track.url
+    const url = trackUrls[track.id] || track.url;
+    const trackWithUrl = { ...track, url };
+    setCurrentTrack(trackWithUrl);
     setIsPlaying(true);
     setTimeout(() => {
-      audioRef.current?.play();
+      if (audioRef.current) {
+        audioRef.current.src = url;
+        audioRef.current.play();
+      }
     }, 100);
   };
 
@@ -261,6 +339,21 @@ export const MusicProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     setUserProfile((prev) => ({ ...prev, ...profile }));
   };
 
+  const updateTrackCover = (trackId: string, coverUrl: string) => {
+    setTracks((prev) =>
+      prev.map((t) => (t.id === trackId ? { ...t, cover: coverUrl } : t))
+    );
+    if (currentTrack?.id === trackId) {
+      setCurrentTrack(prev => prev ? { ...prev, cover: coverUrl } : null);
+    }
+  };
+
+  const updatePlaylistCover = (playlistId: string, coverUrl: string) => {
+    setPlaylists((prev) =>
+      prev.map((p) => (p.id === playlistId ? { ...p, cover: coverUrl } : p))
+    );
+  };
+
   return (
     <MusicContext.Provider
       value={{
@@ -289,6 +382,8 @@ export const MusicProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         addToPlaylist,
         removeFromPlaylist,
         updateUserProfile,
+        updateTrackCover,
+        updatePlaylistCover,
         audioRef,
       }}
     >

@@ -49,16 +49,25 @@ const BottomNav = () => {
 function HomeIcon({ active }: { active?: boolean }) {
   return (
     <svg
+      width="24"
+      height="24"
       viewBox="0 0 24 24"
-      className={`h-6 w-6 ${active ? 'text-foreground' : 'text-muted-foreground'}`}
       fill="none"
-      stroke="currentColor"
-      strokeWidth={1.5}
+      xmlns="http://www.w3.org/2000/svg"
+      className={active ? 'text-foreground' : 'text-muted-foreground'}
     >
-      {/* WiFi-like concentric arcs */}
-      <path d="M12 20a1.5 1.5 0 100-3 1.5 1.5 0 000 3z" fill="currentColor" />
-      <path d="M8.5 15.5a5 5 0 017 0" strokeLinecap="round" />
-      <path d="M5.5 12a9 9 0 0113 0" strokeLinecap="round" />
+      <path
+        d="M12 3.5 C8 3.5 5.5 6.5 5.5 10 C5.5 13.5 8 16.5 12 20 C16 16.5 18.5 13.5 18.5 10 C18.5 6.5 16 3.5 12 3.5Z"
+        stroke="currentColor"
+        strokeWidth="1.6"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M9.2 9.5 C10.8 8.5 13.6 9.6 13.8 11.4 C14 13.2 11.8 14.6 10.4 13.8"
+        stroke="currentColor"
+        strokeWidth="1.6"
+        strokeLinecap="round"
+      />
     </svg>
   );
 }
@@ -66,16 +75,15 @@ function HomeIcon({ active }: { active?: boolean }) {
 function SearchIcon({ active }: { active?: boolean }) {
   return (
     <svg
+      width="24"
+      height="24"
       viewBox="0 0 24 24"
-      className={`h-6 w-6 ${active ? 'text-foreground' : 'text-muted-foreground'}`}
       fill="none"
-      stroke="currentColor"
-      strokeWidth={1.5}
-      strokeLinecap="round"
-      strokeLinejoin="round"
+      xmlns="http://www.w3.org/2000/svg"
+      className={active ? 'text-foreground' : 'text-muted-foreground'}
     >
-      <circle cx="11" cy="11" r="7" />
-      <path d="M21 21l-4.35-4.35" />
+      <circle cx="11" cy="11" r="6" stroke="currentColor" strokeWidth="1.6" />
+      <line x1="15.5" y1="15.5" x2="20" y2="20" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
     </svg>
   );
 }
@@ -83,17 +91,17 @@ function SearchIcon({ active }: { active?: boolean }) {
 function LibraryIcon({ active }: { active?: boolean }) {
   return (
     <svg
+      width="24"
+      height="24"
       viewBox="0 0 24 24"
-      className={`h-6 w-6 ${active ? 'text-foreground' : 'text-muted-foreground'}`}
       fill="none"
-      stroke="currentColor"
-      strokeWidth={2}
-      strokeLinecap="round"
+      xmlns="http://www.w3.org/2000/svg"
+      className={active ? 'text-foreground' : 'text-muted-foreground'}
     >
-      <path d="M4 6h16" />
-      <path d="M4 10h16" />
-      <path d="M4 14h16" />
-      <path d="M4 18h16" />
+      <line x1="7" y1="5" x2="7" y2="19" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+      <line x1="11" y1="5" x2="11" y2="19" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+      <line x1="15" y1="5" x2="15" y2="19" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+      <line x1="17.5" y1="5" x2="20" y2="19" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
     </svg>
   );
 }

@@ -6,40 +6,57 @@ const BottomNav = () => {
   const navigate = useNavigate();
   const { userProfile } = useMusic();
 
-  const items: Array<{label: string; path: string; icon: (({active}: {active?: boolean}) => JSX.Element) | null; avatar?: string}> = [
+  const leftItems: Array<{label: string; path: string; icon: (({active}: {active?: boolean}) => JSX.Element)}> = [
     { label: 'Home', path: '/', icon: HomeIcon },
     { label: 'Discovery', path: '/search', icon: SearchIcon },
+  ];
+
+  const rightItems: Array<{label: string; path: string; icon: (({active}: {active?: boolean}) => JSX.Element) | null; avatar?: string}> = [
     { label: 'Collection', path: '/library', icon: LibraryIcon },
     { label: 'Profile', path: '/profile', icon: null, avatar: userProfile.avatar },
   ];
 
+  const renderNavItem = (item: typeof rightItems[0]) => {
+    const active = location.pathname === item.path;
+    return (
+      <button
+        key={item.path}
+        onClick={() => navigate(item.path)}
+        className="flex flex-col items-center gap-1"
+        aria-current={active ? 'page' : undefined}
+      >
+        {item.avatar ? (
+          <div className={`w-6 h-6 rounded-full overflow-hidden ring-2 ${active ? 'ring-foreground' : 'ring-transparent'}`}>
+            <img src={item.avatar} alt="Profile" className="w-full h-full object-cover" />
+          </div>
+        ) : (
+          item.icon && <item.icon active={active} />
+        )}
+        <span className={`text-[10px] font-medium ${active ? 'text-foreground' : 'text-muted-foreground'}`}>
+          {item.label}
+        </span>
+      </button>
+    );
+  };
+
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-md border-t border-border/30 safe-area-bottom">
       <div className="px-6 pt-3 pb-5 max-w-lg mx-auto">
-        <div className="flex items-center justify-center gap-10">
-          {items.map((item) => {
-            const active = location.pathname === item.path;
+        <div className="flex items-center justify-center gap-6">
+          {leftItems.map(renderNavItem)}
 
-            return (
-              <button
-                key={item.path}
-                onClick={() => navigate(item.path)}
-                className="flex flex-col items-center gap-1"
-                aria-current={active ? 'page' : undefined}
-              >
-                {item.avatar ? (
-                  <div className={`w-6 h-6 rounded-full overflow-hidden ring-2 ${active ? 'ring-foreground' : 'ring-transparent'}`}>
-                    <img src={item.avatar} alt="Profile" className="w-full h-full object-cover" />
-                  </div>
-                ) : (
-                  <item.icon active={active} />
-                )}
-                <span className={`text-[10px] font-medium ${active ? 'text-foreground' : 'text-muted-foreground'}`}>
-                  {item.label}
-                </span>
-              </button>
-            );
-          })}
+          {/* Pill + button */}
+          <button
+            onClick={() => navigate('/record')}
+            className="bg-white rounded-full px-6 py-2 flex items-center justify-center -mt-1 shadow-lg shadow-white/10"
+          >
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+              <line x1="10" y1="3" x2="10" y2="17" stroke="black" strokeWidth="2.2" strokeLinecap="round" />
+              <line x1="3" y1="10" x2="17" y2="10" stroke="black" strokeWidth="2.2" strokeLinecap="round" />
+            </svg>
+          </button>
+
+          {rightItems.map(renderNavItem)}
         </div>
       </div>
     </nav>

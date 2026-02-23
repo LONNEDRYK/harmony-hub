@@ -3,15 +3,15 @@ import { useState, useRef } from 'react';
 import { 
   ChevronLeft, 
   Play, 
-  Pause,
   MoreVertical, 
-  Shuffle,
   Heart,
   Trash2,
   Camera,
   Music,
-  GripVertical,
-  Image
+  Image,
+  MessageCircle,
+  UserPlus,
+  ExternalLink
 } from 'lucide-react';
 import { useMusic, Track } from '@/contexts/MusicContext';
 import TrackOptionsSheet from '@/components/TrackOptionsSheet';
@@ -23,12 +23,11 @@ const PlaylistDetail = () => {
     playlists, 
     tracks, 
     playTrack, 
-    isPlaying, 
     currentTrack, 
-    togglePlay,
     removeFromPlaylist,
     deletePlaylist,
-    updatePlaylistCover
+    updatePlaylistCover,
+    userProfile
   } = useMusic();
   
   const [showOptions, setShowOptions] = useState(false);
@@ -43,12 +42,12 @@ const PlaylistDetail = () => {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <p className="text-muted-foreground">Playlist not found</p>
+          <p className="text-muted-foreground">Playlist introuvable</p>
           <button 
             onClick={() => navigate('/library')}
             className="mt-4 px-6 py-3 rounded-full bg-primary text-primary-foreground"
           >
-            Go back
+            Retour
           </button>
         </div>
       </div>
@@ -59,26 +58,13 @@ const PlaylistDetail = () => {
     .map(trackId => tracks.find(t => t.id === trackId))
     .filter(Boolean) as Track[];
 
-  const totalDuration = playlistTracks.reduce((acc, t) => acc + t.duration, 0);
-  const hours = Math.floor(totalDuration / 3600);
-  const minutes = Math.floor((totalDuration % 3600) / 60);
-
   const handlePlayAll = () => {
     if (playlistTracks.length > 0) {
       playTrack(playlistTracks[0]);
     }
   };
 
-  const handleCameraCapture = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file && id) {
-      const url = URL.createObjectURL(file);
-      updatePlaylistCover(id, url);
-    }
-    setShowCameraModal(false);
-  };
-
-  const handleGallerySelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file && id) {
       const url = URL.createObjectURL(file);
@@ -88,7 +74,7 @@ const PlaylistDetail = () => {
   };
 
   const handleDeletePlaylist = () => {
-    if (confirm('Delete this playlist?')) {
+    if (confirm('Supprimer cette playlist ?')) {
       deletePlaylist(playlist.id);
       navigate('/library');
     }
@@ -96,9 +82,9 @@ const PlaylistDetail = () => {
 
   return (
     <div className="min-h-screen bg-background overflow-hidden pb-36">
-      {/* Header with Cover */}
+      {/* Banner / Cover */}
       <div className="relative">
-        <div className="h-72 relative">
+        <div className="h-80 relative">
           <img
             src={playlist.cover}
             alt={playlist.name}
@@ -123,81 +109,63 @@ const PlaylistDetail = () => {
           </button>
         </div>
 
-        {/* Playlist Info */}
-        <div className="px-5 -mt-20 relative z-10">
-          <h1 className="text-3xl font-bold mb-2">{playlist.name}</h1>
-          <p className="text-muted-foreground">
-            {playlistTracks.length} tracks • {hours > 0 ? `${hours}h ` : ''}{minutes} min
+        {/* Name overlay */}
+        <div className="px-5 -mt-16 relative z-10 text-center">
+          <h1 className="text-3xl font-bold mb-1">{playlist.name}</h1>
+          <p className="text-muted-foreground text-sm">
+            {playlistTracks.length} titre{playlistTracks.length !== 1 ? 's' : ''}
           </p>
         </div>
       </div>
 
-      {/* Actions */}
-      <div className="px-5 py-6 flex items-center gap-4">
+      {/* Action Buttons Row - like social profile */}
+      <div className="px-5 py-5 flex items-center justify-center gap-3">
         <button
           onClick={handlePlayAll}
           disabled={playlistTracks.length === 0}
-          className="flex-1 flex items-center justify-center gap-2 py-4 rounded-2xl bg-primary text-primary-foreground font-semibold disabled:opacity-50"
+          className="px-6 py-3 rounded-full bg-white text-black font-semibold text-sm flex items-center gap-2 disabled:opacity-50"
         >
-          <Play className="w-5 h-5" fill="currentColor" />
-          Play
+          <Play className="w-4 h-4" fill="currentColor" />
+          Écouter
         </button>
-        <button className="w-14 h-14 rounded-2xl bg-white/10 flex items-center justify-center">
-          <Shuffle className="w-5 h-5" />
+        <button className="w-11 h-11 rounded-full bg-white/10 flex items-center justify-center">
+          <UserPlus className="w-5 h-5" />
         </button>
-        <button 
-          onClick={handleDeletePlaylist}
-          className="w-14 h-14 rounded-2xl bg-red-500/10 flex items-center justify-center"
-        >
-          <Trash2 className="w-5 h-5 text-red-500" />
+        <button className="w-11 h-11 rounded-full bg-white/10 flex items-center justify-center">
+          <ExternalLink className="w-5 h-5" />
         </button>
       </div>
 
-      {/* Tracks List */}
+      {/* Tracks as content grid */}
       <div className="px-5">
         {playlistTracks.length > 0 ? (
-          <div className="space-y-2">
-            {playlistTracks.map((track, index) => (
-              <div
+          <div className="grid grid-cols-3 gap-3">
+            {playlistTracks.map((track) => (
+              <button
                 key={track.id}
-                className="flex items-center gap-4 p-3 rounded-xl bg-white/5 hover:bg-white/10 transition-colors"
+                onClick={() => playTrack(track)}
+                className="group relative"
               >
-                <div className="w-6 flex items-center justify-center">
-                  <GripVertical className="w-4 h-4 text-muted-foreground/50" />
-                </div>
-                <button
-                  onClick={() => playTrack(track)}
-                  className="flex items-center gap-4 flex-1 min-w-0"
-                >
+                <div className="aspect-square rounded-xl overflow-hidden relative">
                   <img
                     src={track.cover}
                     alt={track.title}
-                    className="w-12 h-12 rounded-lg object-cover"
+                    className="w-full h-full object-cover"
                   />
-                  <div className="flex-1 min-w-0 text-left">
-                    <p className={`font-medium truncate ${
-                      currentTrack?.id === track.id ? 'text-primary' : ''
-                    }`}>
-                      {track.title}
-                    </p>
-                    <p className="text-sm text-muted-foreground truncate">{track.artist}</p>
-                  </div>
-                </button>
-                <div className="flex items-center gap-2">
                   {track.isFavorite && (
-                    <Heart className="w-4 h-4 text-red-500 fill-red-500" />
+                    <div className="absolute top-2 right-2">
+                      <Heart className="w-4 h-4 text-red-500 fill-red-500" />
+                    </div>
                   )}
-                  <button
-                    onClick={() => {
-                      setSelectedTrack(track);
-                      setShowOptions(true);
-                    }}
-                    className="p-2 rounded-full hover:bg-white/10"
-                  >
-                    <MoreVertical className="w-5 h-5 text-muted-foreground" />
-                  </button>
+                  {/* Play count style overlay */}
+                  <div className="absolute bottom-2 left-2 flex items-center gap-1">
+                    <Play className="w-3 h-3 text-white" fill="white" />
+                    <span className="text-white text-xs font-medium">
+                      {Math.floor(track.duration / 60)}:{String(Math.floor(track.duration % 60)).padStart(2, '0')}
+                    </span>
+                  </div>
                 </div>
-              </div>
+              </button>
             ))}
           </div>
         ) : (
@@ -205,18 +173,29 @@ const PlaylistDetail = () => {
             <div className="w-20 h-20 rounded-full bg-white/5 flex items-center justify-center mx-auto mb-4">
               <Music className="w-8 h-8 text-muted-foreground" />
             </div>
-            <h3 className="text-lg font-semibold mb-2">Empty playlist</h3>
+            <h3 className="text-lg font-semibold mb-2">Playlist vide</h3>
             <p className="text-muted-foreground mb-4">
-              Add tracks from your library
+              Ajoutez des titres depuis la bibliothèque
             </p>
             <button
               onClick={() => navigate('/library')}
               className="px-6 py-3 rounded-full bg-primary text-primary-foreground font-semibold"
             >
-              Browse library
+              Parcourir
             </button>
           </div>
         )}
+      </div>
+
+      {/* Delete button */}
+      <div className="px-5 mt-8">
+        <button 
+          onClick={handleDeletePlaylist}
+          className="w-full py-3 rounded-xl bg-red-500/10 text-red-500 font-medium text-sm"
+        >
+          <Trash2 className="w-4 h-4 inline mr-2" />
+          Supprimer la playlist
+        </button>
       </div>
 
       {/* Camera/Gallery Modal */}
@@ -225,7 +204,7 @@ const PlaylistDetail = () => {
           <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setShowCameraModal(false)} />
           <div className="relative bg-zinc-900 rounded-t-3xl p-6 w-full max-w-lg animate-slide-up">
             <div className="w-10 h-1 bg-white/20 rounded-full mx-auto mb-6" />
-            <h3 className="text-lg font-bold mb-6 text-center">Change cover</h3>
+            <h3 className="text-lg font-bold mb-6 text-center">Changer la couverture</h3>
             
             <div className="grid grid-cols-2 gap-4 mb-6">
               <button
@@ -245,7 +224,7 @@ const PlaylistDetail = () => {
                 <div className="w-14 h-14 rounded-full bg-purple-500/20 flex items-center justify-center">
                   <Image className="w-7 h-7 text-purple-500" />
                 </div>
-                <span className="font-medium">Gallery</span>
+                <span className="font-medium">Galerie</span>
               </button>
             </div>
 
@@ -253,24 +232,11 @@ const PlaylistDetail = () => {
               onClick={() => setShowCameraModal(false)}
               className="w-full py-4 rounded-xl bg-white/5 text-muted-foreground font-medium"
             >
-              Cancel
+              Annuler
             </button>
 
-            <input
-              ref={cameraInputRef}
-              type="file"
-              accept="image/*"
-              capture="environment"
-              onChange={handleCameraCapture}
-              className="hidden"
-            />
-            <input
-              ref={galleryInputRef}
-              type="file"
-              accept="image/*"
-              onChange={handleGallerySelect}
-              className="hidden"
-            />
+            <input ref={cameraInputRef} type="file" accept="image/*" capture="environment" onChange={handleImageSelect} className="hidden" />
+            <input ref={galleryInputRef} type="file" accept="image/*" onChange={handleImageSelect} className="hidden" />
           </div>
         </div>
       )}

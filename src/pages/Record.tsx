@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import { useState, useRef, useEffect } from 'react';
-import { X, Mic, Camera, Image, Type, Paperclip, FlipHorizontal, Settings } from 'lucide-react';
+import { X, Mic, Image, Type, Paperclip, FlipHorizontal, Settings } from 'lucide-react';
 import cameraBg from '@/assets/camera-bg.png';
 
 const Record = () => {
@@ -64,12 +64,12 @@ const Record = () => {
     setFacingMode(prev => prev === 'user' ? 'environment' : 'user');
   };
 
-  // Activation screen before camera
+  // Activation screen - blurred background with prompt
   if (!cameraActivated) {
     return (
       <div className="fixed inset-0 z-50 bg-black flex flex-col">
         {/* Close button */}
-        <div className="absolute top-0 left-0 right-0 p-4 pt-safe z-10 flex items-center">
+        <div className="absolute top-0 left-0 right-0 p-4 pt-safe z-20 flex items-center">
           <button
             onClick={() => navigate(-1)}
             className="w-10 h-10 rounded-full bg-black/40 backdrop-blur-md flex items-center justify-center"
@@ -78,22 +78,33 @@ const Record = () => {
           </button>
         </div>
 
-        {/* Blurred background image */}
-        <div className="flex-1 relative flex items-center justify-center">
+        {/* Full screen blurred background */}
+        <div className="flex-1 relative flex items-center justify-center overflow-hidden">
           <img
             src={cameraBg}
             alt=""
-            className="absolute inset-0 w-full h-full object-cover blur-lg scale-110"
+            className="absolute inset-0 w-full h-full object-cover"
+            style={{ filter: 'blur(20px)', transform: 'scale(1.15)' }}
           />
-          <div className="absolute inset-0 bg-black/30" />
           
-          <div className="relative z-10 text-center px-8">
-            <p className="text-white text-lg font-medium leading-relaxed mb-8">
+          {/* Rounded card overlay */}
+          <div className="absolute inset-4 rounded-3xl overflow-hidden">
+            <img
+              src={cameraBg}
+              alt=""
+              className="absolute inset-0 w-full h-full object-cover"
+              style={{ filter: 'blur(18px)', transform: 'scale(1.1)' }}
+            />
+          </div>
+
+          {/* Text + CTA centered */}
+          <div className="relative z-10 text-center px-10">
+            <p className="text-black text-xl font-semibold leading-relaxed mb-8">
               Enregistrez-vous entrain de chanter et partager à vos amis pour 5 crédits à gagner
             </p>
             <button
               onClick={() => setCameraActivated(true)}
-              className="px-8 py-4 rounded-full bg-white text-black font-bold text-base"
+              className="px-10 py-4 rounded-full bg-white text-black font-bold text-lg shadow-xl"
             >
               Activer la caméra
             </button>

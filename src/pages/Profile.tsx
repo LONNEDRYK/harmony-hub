@@ -21,21 +21,21 @@ const Profile = () => {
 
   return (
     <div className="min-h-screen pb-36 bg-background">
-      {/* Header */}
+      {/* Header - Changer de compte */}
       <div className="pt-safe" />
-      <div className="px-5 pt-6 pb-2 text-center">
-        <p className="text-muted-foreground text-sm">Changer de compte ▿</p>
+      <div className="px-5 pt-4 pb-6 text-center">
+        <p className="text-muted-foreground text-base">Changer de compte ▿</p>
       </div>
 
-      {/* Profile Card */}
-      <div className="px-5 py-6">
-        <div className="flex items-center gap-5">
-          {/* Avatar */}
+      {/* Profile Card - Large avatar + info */}
+      <div className="px-5 pb-8">
+        <div className="flex items-start gap-5">
+          {/* Large Avatar */}
           <button
             onClick={() => setShowCameraModal(true)}
             className="relative shrink-0"
           >
-            <div className="w-24 h-24 rounded-full overflow-hidden ring-2 ring-white/10">
+            <div className="w-36 h-36 rounded-full overflow-hidden ring-2 ring-white/10">
               <img
                 src={userProfile.avatar}
                 alt="Profile"
@@ -44,36 +44,36 @@ const Profile = () => {
             </div>
           </button>
 
-          {/* Info */}
-          <div className="flex-1 min-w-0">
-            <h2 className="text-2xl font-bold truncate">{userProfile.name}</h2>
-            <p className="text-muted-foreground text-sm mt-1">
+          {/* Info - right side */}
+          <div className="flex-1 min-w-0 pt-4">
+            <h2 className="text-2xl font-bold truncate leading-tight">{userProfile.name}</h2>
+            <p className="text-muted-foreground text-base mt-2">
               Stockage utilisé :
             </p>
-            <p className="text-muted-foreground text-sm">
-              {tracks.length} son{tracks.length !== 1 ? 's' : ''} enregistré{tracks.length !== 1 ? 's' : ''}
+            <p className="text-muted-foreground text-base">
+              {tracks.length} son{tracks.length !== 1 ? 's' : ''} enregistré{tracks.length !== 1 ? 's' : ''}...
             </p>
           </div>
         </div>
       </div>
 
-      {/* Action Buttons */}
-      <div className="px-5 flex items-center gap-3">
+      {/* Action Buttons - matching reference sizes */}
+      <div className="px-5 flex items-center gap-2.5">
         <button
           onClick={() => navigate('/library')}
-          className="px-6 py-3 rounded-full bg-white text-black font-semibold text-sm"
+          className="px-5 py-3 rounded-full bg-white text-black font-semibold text-sm whitespace-nowrap"
         >
           Voir les sons
         </button>
         <button
           onClick={() => navigate('/settings')}
-          className="px-6 py-3 rounded-full bg-white/10 font-semibold text-sm"
+          className="px-5 py-3 rounded-full bg-white/10 font-semibold text-sm whitespace-nowrap"
         >
           Éditer le profil
         </button>
         <button
           onClick={() => navigate('/settings')}
-          className="w-12 h-12 rounded-full bg-white/10 flex items-center justify-center"
+          className="w-12 h-12 rounded-full bg-white/10 flex items-center justify-center shrink-0"
         >
           <Settings className="w-5 h-5" />
         </button>

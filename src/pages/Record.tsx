@@ -1,6 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import { useState, useRef, useEffect } from 'react';
 import { X, Mic, Camera, Image, Type, Paperclip, FlipHorizontal, Settings } from 'lucide-react';
+import cameraBg from '@/assets/camera-bg.png';
 
 const Record = () => {
   const navigate = useNavigate();
@@ -8,15 +9,18 @@ const Record = () => {
   const [isRecording, setIsRecording] = useState(false);
   const [stream, setStream] = useState<MediaStream | null>(null);
   const [facingMode, setFacingMode] = useState<'user' | 'environment'>('user');
+  const [cameraActivated, setCameraActivated] = useState(false);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
 
   useEffect(() => {
-    startCamera();
+    if (cameraActivated) {
+      startCamera();
+    }
     return () => {
       stream?.getTracks().forEach(track => track.stop());
     };
-  }, [facingMode]);
+  }, [facingMode, cameraActivated]);
 
   const startCamera = async () => {
     try {
@@ -49,7 +53,6 @@ const Record = () => {
         const blob = new Blob(chunksRef.current, { type: 'video/webm' });
         const url = URL.createObjectURL(blob);
         console.log('Recording saved:', url);
-        // Could navigate to an edit/share page with the blob
       };
       mediaRecorderRef.current = recorder;
       recorder.start();
@@ -60,6 +63,45 @@ const Record = () => {
   const flipCamera = () => {
     setFacingMode(prev => prev === 'user' ? 'environment' : 'user');
   };
+
+  // Activation screen before camera
+  if (!cameraActivated) {
+    return (
+      <div className="fixed inset-0 z-50 bg-black flex flex-col">
+        {/* Close button */}
+        <div className="absolute top-0 left-0 right-0 p-4 pt-safe z-10 flex items-center">
+          <button
+            onClick={() => navigate(-1)}
+            className="w-10 h-10 rounded-full bg-black/40 backdrop-blur-md flex items-center justify-center"
+          >
+            <X className="w-5 h-5 text-white" />
+          </button>
+        </div>
+
+        {/* Blurred background image */}
+        <div className="flex-1 relative flex items-center justify-center">
+          <img
+            src={cameraBg}
+            alt=""
+            className="absolute inset-0 w-full h-full object-cover blur-lg scale-110"
+          />
+          <div className="absolute inset-0 bg-black/30" />
+          
+          <div className="relative z-10 text-center px-8">
+            <p className="text-white text-lg font-medium leading-relaxed mb-8">
+              Enregistrez-vous entrain de chanter et partager à vos amis pour 5 crédits à gagner
+            </p>
+            <button
+              onClick={() => setCameraActivated(true)}
+              className="px-8 py-4 rounded-full bg-white text-black font-bold text-base"
+            >
+              Activer la caméra
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="fixed inset-0 z-50 bg-black flex flex-col">
@@ -101,7 +143,6 @@ const Record = () => {
 
       {/* Bottom Controls */}
       <div className="bg-black/90 backdrop-blur-xl px-6 py-6 pb-safe">
-        {/* Tool Bar */}
         <div className="flex items-center justify-around mb-6">
           <button className="flex flex-col items-center gap-1 opacity-70">
             <Image className="w-6 h-6 text-white" />
@@ -117,12 +158,8 @@ const Record = () => {
           </button>
         </div>
 
-        {/* Record Button */}
         <div className="flex items-center justify-center">
-          <button
-            onClick={toggleRecording}
-            className="relative"
-          >
+          <button onClick={toggleRecording} className="relative">
             <div className={`w-20 h-20 rounded-full border-4 border-white flex items-center justify-center transition-all ${isRecording ? 'scale-110' : ''}`}>
               <div className={`rounded-full transition-all ${isRecording ? 'w-8 h-8 rounded-lg bg-red-500' : 'w-16 h-16 bg-white'}`} />
             </div>

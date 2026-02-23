@@ -16,6 +16,7 @@ import Settings from "./pages/Settings";
 import Notifications from "./pages/Notifications";
 import PlaylistDetail from "./pages/PlaylistDetail";
 import NotFound from "./pages/NotFound";
+import Record from "./pages/Record";
 import { useState } from "react";
 
 const queryClient = new QueryClient();
@@ -25,7 +26,7 @@ const AppContent = () => {
   const [welcomeComplete, setWelcomeComplete] = useState(() => {
     return localStorage.getItem('musicflow_welcome_seen') === 'true';
   });
-  const hideNav = ['/player'].includes(location.pathname);
+  const hideNav = ['/player', '/record'].includes(location.pathname);
 
   return (
     <div className="w-full max-w-4xl mx-auto min-h-screen relative overflow-x-hidden">
@@ -41,6 +42,7 @@ const AppContent = () => {
         <Route path="/settings" element={<Settings />} />
         <Route path="/notifications" element={<Notifications />} />
         <Route path="/playlist/:id" element={<PlaylistDetail />} />
+        <Route path="/record" element={<Record />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
       {!hideNav && welcomeComplete && (

@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Music, Grid3X3, List, X, Play, Pause, Camera, Image, Heart, MoreVertical } from 'lucide-react';
+import { Plus, Music, Grid3X3, List, X, Play, Pause, Camera, Image, Heart, MoreVertical, Search } from 'lucide-react';
 import { useMusic, Track } from '@/contexts/MusicContext';
 import TrackOptionsSheet from '@/components/TrackOptionsSheet';
 
@@ -14,13 +14,17 @@ const Library = () => {
   const [newPlaylistName, setNewPlaylistName] = useState('');
   const [selectedTrack, setSelectedTrack] = useState<Track | null>(null);
   const [showOptions, setShowOptions] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
   const [showCameraModal, setShowCameraModal] = useState(false);
   const [targetTrackId, setTargetTrackId] = useState<string | null>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
   const galleryInputRef = useRef<HTMLInputElement>(null);
 
   const favorites = tracks.filter(t => t.isFavorite);
-  const displayTracks = activeTab === 'favorites' ? favorites : tracks;
+  const baseTracks = activeTab === 'favorites' ? favorites : tracks;
+  const displayTracks = searchQuery
+    ? baseTracks.filter(t => t.title.toLowerCase().includes(searchQuery.toLowerCase()) || t.artist.toLowerCase().includes(searchQuery.toLowerCase()))
+    : baseTracks;
 
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
@@ -54,118 +58,147 @@ const Library = () => {
   };
 
   const tabs = [
-    { key: 'all' as const, label: `Tout (${tracks.length})` },
-    { key: 'favorites' as const, label: `Favoris (${favorites.length})` },
-    { key: 'playlists' as const, label: 'Playlists' },
+    { key: 'all' as const, label: 'Tout', count: tracks.length },
+    { key: 'favorites' as const, label: 'Favoris', count: favorites.length },
+    { key: 'playlists' as const, label: 'Playlists', count: playlists.length },
   ];
 
   return (
-    <div className="min-h-screen pb-36 bg-background">
+    <div className="min-h-screen pb-32 bg-background">
       {/* Header */}
-      <header className="px-5 pt-14 pb-2">
-        <div className="flex items-center justify-between mb-4">
-          <h1 className="text-xl font-bold">Bibliothèque</h1>
+      <header className="px-4 pt-12 pb-1">
+        <div className="flex items-center justify-between mb-3">
+          <div>
+            <h1 className="text-lg font-bold leading-tight">Bibliothèque</h1>
+            <p className="text-[10px] text-muted-foreground mt-px">
+              {tracks.length} titre{tracks.length !== 1 ? 's' : ''} • {playlists.length} playlist{playlists.length !== 1 ? 's' : ''}
+            </p>
+          </div>
           <button
             onClick={() => fileInputRef.current?.click()}
-            className="w-9 h-9 rounded-full bg-foreground flex items-center justify-center"
+            className="w-8 h-8 rounded-full bg-foreground flex items-center justify-center"
           >
-            <Plus className="w-4 h-4 text-background" />
+            <Plus className="w-3.5 h-3.5 text-background" />
           </button>
         </div>
+
+        {/* Search */}
+        <div className="relative mb-3">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Rechercher..."
+            className="w-full bg-card border border-border/20 rounded-xl pl-8 pr-3 py-2 text-[11px] placeholder:text-muted-foreground/60 focus:outline-none focus:ring-1 focus:ring-ring/30"
+          />
+        </div>
+
         <input ref={fileInputRef} type="file" accept="audio/*" multiple onChange={handleFileSelect} className="hidden" />
       </header>
 
       {/* Tabs */}
-      <div className="px-5 mb-4">
-        <div className="flex gap-2">
+      <div className="px-4 mb-3">
+        <div className="flex gap-1.5">
           {tabs.map(tab => (
             <button
               key={tab.key}
               onClick={() => setActiveTab(tab.key)}
-              className={`px-4 py-2 rounded-full text-xs font-semibold transition-colors ${
+              className={`px-3 py-1.5 rounded-full text-[10px] font-semibold transition-colors ${
                 activeTab === tab.key
                   ? 'bg-foreground text-background'
-                  : 'bg-card border border-border/30 text-muted-foreground'
+                  : 'bg-card border border-border/20 text-muted-foreground'
               }`}
             >
-              {tab.label}
+              {tab.label} ({tab.count})
             </button>
           ))}
         </div>
       </div>
 
       {/* Content */}
-      <div className="px-5">
+      <div className="px-4">
         {activeTab !== 'playlists' ? (
           <>
-            {/* View toggle */}
             {displayTracks.length > 0 && (
-              <div className="flex items-center justify-end gap-1 mb-3">
-                <button
-                  onClick={() => setViewMode('list')}
-                  className={`p-1.5 rounded-lg ${viewMode === 'list' ? 'text-foreground' : 'text-muted-foreground'}`}
-                >
-                  <List className="w-4 h-4" />
-                </button>
-                <button
-                  onClick={() => setViewMode('grid')}
-                  className={`p-1.5 rounded-lg ${viewMode === 'grid' ? 'text-foreground' : 'text-muted-foreground'}`}
-                >
-                  <Grid3X3 className="w-4 h-4" />
-                </button>
+              <div className="flex items-center justify-between mb-2">
+                <p className="text-[10px] text-muted-foreground">{displayTracks.length} résultat{displayTracks.length !== 1 ? 's' : ''}</p>
+                <div className="flex gap-px">
+                  <button
+                    onClick={() => setViewMode('list')}
+                    className={`p-1 rounded ${viewMode === 'list' ? 'text-foreground' : 'text-muted-foreground/50'}`}
+                  >
+                    <List className="w-3.5 h-3.5" />
+                  </button>
+                  <button
+                    onClick={() => setViewMode('grid')}
+                    className={`p-1 rounded ${viewMode === 'grid' ? 'text-foreground' : 'text-muted-foreground/50'}`}
+                  >
+                    <Grid3X3 className="w-3.5 h-3.5" />
+                  </button>
+                </div>
               </div>
             )}
 
             {displayTracks.length > 0 ? (
               viewMode === 'grid' ? (
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-2 gap-2.5">
                   {displayTracks.map(track => {
                     const isActive = currentTrack?.id === track.id;
                     return (
                       <button key={track.id} onClick={() => handleTrackPlay(track)} className="text-left">
-                        <div className="relative aspect-square rounded-xl overflow-hidden mb-1.5">
+                        <div className="relative aspect-square rounded-xl overflow-hidden mb-1">
                           <img src={track.cover} alt={track.title} className="w-full h-full object-cover" />
                           <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
                           {isActive && isPlaying && (
-                            <div className="absolute bottom-2 right-2 w-8 h-8 rounded-full bg-white flex items-center justify-center">
-                              <Pause className="w-3.5 h-3.5 text-background" fill="currentColor" />
+                            <div className="absolute bottom-1.5 right-1.5 w-7 h-7 rounded-full bg-white flex items-center justify-center">
+                              <Pause className="w-3 h-3 text-background" fill="currentColor" />
                             </div>
                           )}
                           {track.isFavorite && (
-                            <div className="absolute top-2 right-2">
-                              <Heart className="w-3.5 h-3.5 text-red-500 fill-red-500" />
+                            <div className="absolute top-1.5 right-1.5">
+                              <Heart className="w-3 h-3 text-red-500 fill-red-500" />
                             </div>
                           )}
                         </div>
-                        <p className="text-xs font-semibold truncate">{track.title}</p>
-                        <p className="text-[10px] text-muted-foreground truncate">{track.artist}</p>
+                        <p className="text-[11px] font-semibold truncate">{track.title}</p>
+                        <p className="text-[9px] text-muted-foreground truncate">{track.artist}</p>
                       </button>
                     );
                   })}
                 </div>
               ) : (
-                <div className="space-y-0.5">
+                <div className="space-y-px">
                   {displayTracks.map(track => {
                     const isActive = currentTrack?.id === track.id;
                     return (
                       <div
                         key={track.id}
-                        className={`flex items-center gap-3 p-2.5 rounded-xl ${isActive ? 'bg-card' : ''}`}
+                        className={`flex items-center gap-2.5 py-2 px-2 rounded-lg transition-colors ${isActive ? 'bg-card' : ''}`}
                       >
-                        <button onClick={() => handleTrackPlay(track)} className="relative w-11 h-11 rounded-lg overflow-hidden shrink-0">
+                        <button onClick={() => handleTrackPlay(track)} className="relative w-10 h-10 rounded-lg overflow-hidden shrink-0">
                           <img src={track.cover} alt={track.title} className="w-full h-full object-cover" />
+                          {isActive && (
+                            <div className="absolute inset-0 bg-black/30 flex items-center justify-center">
+                              {isPlaying ? (
+                                <Pause className="w-3.5 h-3.5 text-white" fill="currentColor" />
+                              ) : (
+                                <Play className="w-3.5 h-3.5 text-white ml-px" fill="currentColor" />
+                              )}
+                            </div>
+                          )}
                         </button>
                         <button onClick={() => handleTrackPlay(track)} className="flex-1 min-w-0 text-left">
-                          <p className="text-xs font-semibold truncate">{track.title}</p>
-                          <p className="text-[10px] text-muted-foreground truncate">{track.artist}</p>
+                          <p className={`text-[11px] font-semibold truncate ${isActive ? 'text-foreground' : ''}`}>{track.title}</p>
+                          <p className="text-[9px] text-muted-foreground truncate">{track.artist} • {Math.floor(track.duration / 60)}:{String(Math.floor(track.duration % 60)).padStart(2, '0')}</p>
                         </button>
-                        <div className="flex items-center gap-1 shrink-0">
-                          {track.isFavorite && <Heart className="w-3 h-3 text-red-500 fill-red-500" />}
+                        <div className="flex items-center gap-0.5 shrink-0">
+                          {track.isFavorite && <Heart className="w-2.5 h-2.5 text-red-500 fill-red-500" />}
                           <button
-                            onClick={() => { setSelectedTrack(track); setShowOptions(true); }}
-                            className="p-1.5"
+                            onClick={(e) => { e.stopPropagation(); setSelectedTrack(track); setShowOptions(true); }}
+                            className="p-1"
                           >
-                            <MoreVertical className="w-4 h-4 text-muted-foreground" />
+                            <MoreVertical className="w-3.5 h-3.5 text-muted-foreground" />
                           </button>
                         </div>
                       </div>
@@ -178,42 +211,41 @@ const Library = () => {
             )}
           </>
         ) : (
-          /* Playlists tab */
           <div>
             {playlists.length > 0 ? (
-              <div className="space-y-2">
+              <div className="space-y-1.5">
                 {playlists.map(playlist => (
                   <button
                     key={playlist.id}
                     onClick={() => navigate(`/playlist/${playlist.id}`)}
-                    className="w-full flex items-center gap-3 bg-card/60 border border-border/20 rounded-xl p-3"
+                    className="w-full flex items-center gap-2.5 bg-card/50 border border-border/10 rounded-xl p-2.5"
                   >
-                    <img src={playlist.cover} alt={playlist.name} className="w-12 h-12 rounded-lg object-cover" />
+                    <img src={playlist.cover} alt={playlist.name} className="w-11 h-11 rounded-lg object-cover" />
                     <div className="flex-1 min-w-0 text-left">
-                      <p className="font-semibold text-sm truncate">{playlist.name}</p>
-                      <p className="text-[11px] text-muted-foreground">{playlist.trackIds.length} titre{playlist.trackIds.length !== 1 ? 's' : ''}</p>
+                      <p className="font-semibold text-[12px] truncate">{playlist.name}</p>
+                      <p className="text-[10px] text-muted-foreground">{playlist.trackIds.length} titre{playlist.trackIds.length !== 1 ? 's' : ''}</p>
                     </div>
-                    <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center">
-                      <Play className="w-3.5 h-3.5 ml-0.5" fill="currentColor" />
+                    <div className="w-7 h-7 rounded-full bg-muted flex items-center justify-center">
+                      <Play className="w-3 h-3 ml-px" fill="currentColor" />
                     </div>
                   </button>
                 ))}
                 <button
                   onClick={() => setShowCreatePlaylist(true)}
-                  className="w-full py-3 rounded-xl border border-dashed border-border/40 text-muted-foreground text-xs font-medium flex items-center justify-center gap-2"
+                  className="w-full py-2.5 rounded-xl border border-dashed border-border/30 text-muted-foreground text-[10px] font-medium flex items-center justify-center gap-1.5"
                 >
-                  <Plus className="w-3.5 h-3.5" />
+                  <Plus className="w-3 h-3" />
                   Nouvelle playlist
                 </button>
               </div>
             ) : (
-              <div className="text-center py-16">
-                <Music className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
-                <h3 className="font-semibold text-sm mb-2">Aucune playlist</h3>
-                <p className="text-muted-foreground text-xs mb-5">Crée ta première playlist</p>
+              <div className="text-center py-14">
+                <Music className="w-8 h-8 text-muted-foreground mx-auto mb-2.5" />
+                <h3 className="font-semibold text-[13px] mb-1">Aucune playlist</h3>
+                <p className="text-muted-foreground text-[10px] mb-4">Crée ta première playlist</p>
                 <button
                   onClick={() => setShowCreatePlaylist(true)}
-                  className="px-6 py-2.5 rounded-full bg-foreground text-background font-semibold text-sm"
+                  className="px-5 py-2 rounded-full bg-foreground text-background font-semibold text-[12px]"
                 >
                   Créer
                 </button>
@@ -225,26 +257,26 @@ const Library = () => {
 
       {/* Create Playlist Modal */}
       {showCreatePlaylist && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-5">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setShowCreatePlaylist(false)} />
-          <div className="relative bg-card rounded-2xl p-5 w-full max-w-sm border border-border/20 animate-fade-in">
-            <button onClick={() => setShowCreatePlaylist(false)} className="absolute top-4 right-4">
+          <div className="relative bg-card rounded-2xl p-4 w-full max-w-xs border border-border/10 animate-fade-in">
+            <button onClick={() => setShowCreatePlaylist(false)} className="absolute top-3 right-3">
               <X className="w-4 h-4 text-muted-foreground" />
             </button>
-            <h3 className="text-sm font-bold mb-4">Nouvelle playlist</h3>
+            <h3 className="text-[13px] font-bold mb-3">Nouvelle playlist</h3>
             <input
               type="text"
               value={newPlaylistName}
               onChange={(e) => setNewPlaylistName(e.target.value)}
               placeholder="Nom de la playlist"
-              className="w-full bg-muted rounded-xl px-4 py-3 placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring mb-4 text-sm"
+              className="w-full bg-muted rounded-xl px-3.5 py-2.5 placeholder:text-muted-foreground/60 focus:outline-none focus:ring-1 focus:ring-ring/30 mb-3 text-[12px]"
               autoFocus
               onKeyDown={(e) => e.key === 'Enter' && handleCreatePlaylist()}
             />
             <button
               onClick={handleCreatePlaylist}
               disabled={!newPlaylistName.trim()}
-              className="w-full py-3 rounded-xl bg-foreground text-background font-semibold text-sm disabled:opacity-40"
+              className="w-full py-2.5 rounded-xl bg-foreground text-background font-semibold text-[12px] disabled:opacity-40"
             >
               Créer
             </button>
@@ -256,20 +288,20 @@ const Library = () => {
       {showCameraModal && (
         <div className="fixed inset-0 z-50 flex items-end justify-center">
           <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setShowCameraModal(false)} />
-          <div className="relative bg-card rounded-t-3xl p-6 w-full max-w-lg animate-slide-up">
-            <div className="w-10 h-1 bg-muted rounded-full mx-auto mb-6" />
-            <h3 className="text-sm font-bold mb-5 text-center">Changer la couverture</h3>
-            <div className="grid grid-cols-2 gap-3 mb-5">
-              <button onClick={() => cameraInputRef.current?.click()} className="flex flex-col items-center gap-2 p-5 bg-muted/50 rounded-2xl">
-                <Camera className="w-6 h-6 text-muted-foreground" />
-                <span className="font-medium text-xs">Caméra</span>
+          <div className="relative bg-card rounded-t-2xl p-5 w-full max-w-lg animate-slide-up">
+            <div className="w-8 h-1 bg-muted rounded-full mx-auto mb-5" />
+            <h3 className="text-[12px] font-bold mb-4 text-center">Changer la couverture</h3>
+            <div className="grid grid-cols-2 gap-2.5 mb-4">
+              <button onClick={() => cameraInputRef.current?.click()} className="flex flex-col items-center gap-2 p-4 bg-muted/50 rounded-xl">
+                <Camera className="w-5 h-5 text-muted-foreground" />
+                <span className="font-medium text-[10px]">Caméra</span>
               </button>
-              <button onClick={() => galleryInputRef.current?.click()} className="flex flex-col items-center gap-2 p-5 bg-muted/50 rounded-2xl">
-                <Image className="w-6 h-6 text-muted-foreground" />
-                <span className="font-medium text-xs">Galerie</span>
+              <button onClick={() => galleryInputRef.current?.click()} className="flex flex-col items-center gap-2 p-4 bg-muted/50 rounded-xl">
+                <Image className="w-5 h-5 text-muted-foreground" />
+                <span className="font-medium text-[10px]">Galerie</span>
               </button>
             </div>
-            <button onClick={() => setShowCameraModal(false)} className="w-full py-3.5 rounded-xl bg-muted/50 text-muted-foreground font-medium text-sm">
+            <button onClick={() => setShowCameraModal(false)} className="w-full py-3 rounded-xl bg-muted/50 text-muted-foreground font-medium text-[11px]">
               Annuler
             </button>
             <input ref={cameraInputRef} type="file" accept="image/*" capture="environment" onChange={handleImageCapture} className="hidden" />
@@ -286,14 +318,14 @@ const Library = () => {
 };
 
 const EmptyState = ({ onImport, type }: { onImport: () => void; type: string }) => (
-  <div className="text-center py-16">
-    <div className="w-16 h-16 rounded-full bg-card border border-border/20 flex items-center justify-center mx-auto mb-4">
-      {type === 'favorites' ? <Heart className="w-6 h-6 text-muted-foreground" /> : <Music className="w-6 h-6 text-muted-foreground" />}
+  <div className="text-center py-14">
+    <div className="w-14 h-14 rounded-full bg-card border border-border/10 flex items-center justify-center mx-auto mb-3">
+      {type === 'favorites' ? <Heart className="w-5 h-5 text-muted-foreground" /> : <Music className="w-5 h-5 text-muted-foreground" />}
     </div>
-    <h3 className="text-sm font-bold mb-2">{type === 'favorites' ? 'Aucun favori' : 'Bibliothèque vide'}</h3>
-    <p className="text-muted-foreground text-xs mb-5">{type === 'favorites' ? 'Ajoute des titres en favoris' : 'Importe tes fichiers audio'}</p>
+    <h3 className="text-[13px] font-bold mb-1">{type === 'favorites' ? 'Aucun favori' : 'Bibliothèque vide'}</h3>
+    <p className="text-muted-foreground text-[10px] mb-4">{type === 'favorites' ? 'Ajoute des titres en favoris' : 'Importe tes fichiers audio'}</p>
     {type !== 'favorites' && (
-      <button onClick={onImport} className="px-6 py-2.5 rounded-full bg-foreground text-background font-semibold text-sm">
+      <button onClick={onImport} className="px-5 py-2 rounded-full bg-foreground text-background font-semibold text-[12px]">
         Importer
       </button>
     )}

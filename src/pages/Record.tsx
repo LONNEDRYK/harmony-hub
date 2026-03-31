@@ -64,7 +64,7 @@ const Record = () => {
     setFacingMode(prev => prev === 'user' ? 'environment' : 'user');
   };
 
-  // Activation screen - blurred background with prompt
+  // Activation screen
   if (!cameraActivated) {
     return (
       <div className="fixed inset-0 z-50 bg-black flex flex-col">
@@ -116,8 +116,8 @@ const Record = () => {
 
   return (
     <div className="fixed inset-0 z-50 bg-black flex flex-col">
-      {/* Camera Preview */}
-      <div className="flex-1 relative overflow-hidden">
+      {/* Camera Preview - takes most of the screen */}
+      <div className="flex-1 relative overflow-hidden rounded-b-3xl">
         <video
           ref={videoRef}
           autoPlay
@@ -126,8 +126,8 @@ const Record = () => {
           className="w-full h-full object-cover"
         />
 
-        {/* Top bar */}
-        <div className="absolute top-0 left-0 right-0 p-4 pt-safe flex items-center justify-between">
+        {/* Top bar - close button only */}
+        <div className="absolute top-0 left-0 right-0 p-4 pt-safe flex items-center justify-start">
           <button
             onClick={() => {
               stream?.getTracks().forEach(track => track.stop());
@@ -137,44 +137,84 @@ const Record = () => {
           >
             <X className="w-5 h-5 text-white" />
           </button>
+        </div>
 
-          <div className="flex items-center gap-3">
-            <button className="w-10 h-10 rounded-full bg-black/40 backdrop-blur-md flex items-center justify-center">
+        {/* Bottom overlay controls inside camera view */}
+        <div className="absolute bottom-0 left-0 right-0 pb-6">
+          {/* Settings & Flip buttons - left and right of center */}
+          <div className="flex items-end justify-center gap-8 mb-4">
+            <button className="w-11 h-11 rounded-full bg-black/30 backdrop-blur-md border border-white/20 flex items-center justify-center">
               <Settings className="w-5 h-5 text-white" />
             </button>
+
+            {/* Record button - center */}
+            <button onClick={toggleRecording} className="relative">
+              <div className={`w-[72px] h-[72px] rounded-full border-[3px] border-white flex items-center justify-center transition-all ${isRecording ? 'scale-105' : ''}`}>
+                <div className={`rounded-full transition-all ${isRecording ? 'w-7 h-7 rounded-md bg-red-500' : 'w-[58px] h-[58px] bg-white'}`} />
+              </div>
+            </button>
+
             <button
               onClick={flipCamera}
-              className="w-10 h-10 rounded-full bg-black/40 backdrop-blur-md flex items-center justify-center"
+              className="w-11 h-11 rounded-full bg-black/30 backdrop-blur-md border border-white/20 flex items-center justify-center"
             >
               <FlipHorizontal className="w-5 h-5 text-white" />
+            </button>
+          </div>
+
+          {/* Tool icons row */}
+          <div className="flex items-center justify-center gap-10">
+            <button className="flex items-center justify-center opacity-80 hover:opacity-100 transition-opacity">
+              <Image className="w-6 h-6 text-white" />
+            </button>
+            <button className="flex items-center justify-center opacity-80 hover:opacity-100 transition-opacity">
+              <Mic className="w-6 h-6 text-white" />
+            </button>
+            <button className="flex items-center justify-center opacity-80 hover:opacity-100 transition-opacity">
+              <Type className="w-6 h-6 text-white" />
+            </button>
+            <button className="flex items-center justify-center opacity-80 hover:opacity-100 transition-opacity">
+              <Paperclip className="w-6 h-6 text-white" />
             </button>
           </div>
         </div>
       </div>
 
-      {/* Bottom Controls */}
-      <div className="bg-black/90 backdrop-blur-xl px-6 py-6 pb-safe">
-        <div className="flex items-center justify-around mb-6">
-          <button className="flex flex-col items-center gap-1 opacity-70">
-            <Image className="w-6 h-6 text-white" />
-          </button>
-          <button className="flex flex-col items-center gap-1 opacity-70">
-            <Mic className="w-6 h-6 text-white" />
-          </button>
-          <button className="flex flex-col items-center gap-1 opacity-70">
-            <Type className="w-6 h-6 text-white" />
-          </button>
-          <button className="flex flex-col items-center gap-1 opacity-70">
-            <Paperclip className="w-6 h-6 text-white" />
-          </button>
-        </div>
-
-        <div className="flex items-center justify-center">
-          <button onClick={toggleRecording} className="relative">
-            <div className={`w-20 h-20 rounded-full border-4 border-white flex items-center justify-center transition-all ${isRecording ? 'scale-110' : ''}`}>
-              <div className={`rounded-full transition-all ${isRecording ? 'w-8 h-8 rounded-lg bg-red-500' : 'w-16 h-16 bg-white'}`} />
+      {/* Bottom stories/recent section */}
+      <div className="bg-black px-4 py-4 pb-safe">
+        <div className="flex gap-3 overflow-x-auto scrollbar-hide">
+          {[
+            { time: '2h', color: 'bg-muted/20', hasImage: true },
+            { time: '1h', color: 'bg-primary/30', hasAvatar: true },
+            { time: '1m', color: 'bg-primary', hasText: true, text: 'Nouveau morceau disponible !' },
+            { time: 'now', color: 'bg-muted/20', hasFile: true, file: 'audio_mix.mp3' },
+          ].map((item, i) => (
+            <div
+              key={i}
+              className={`flex-shrink-0 w-[120px] h-[120px] rounded-2xl ${item.color} relative overflow-hidden flex flex-col justify-between p-3`}
+            >
+              <span className="text-xs font-semibold text-green-400 self-end">{item.time}</span>
+              <div className="flex-1 flex items-center justify-center">
+                {item.hasAvatar && (
+                  <div className="w-12 h-12 rounded-full bg-primary/40 border-2 border-primary/60" />
+                )}
+                {item.hasText && (
+                  <p className="text-xs text-white font-medium leading-tight text-center">{item.text}</p>
+                )}
+                {item.hasFile && (
+                  <div className="text-center">
+                    <div className="w-10 h-12 bg-muted/30 rounded-lg mx-auto mb-1 flex items-center justify-center">
+                      <Paperclip className="w-4 h-4 text-muted-foreground" />
+                    </div>
+                    <p className="text-[10px] text-muted-foreground">{item.file}</p>
+                  </div>
+                )}
+                {item.hasImage && (
+                  <div className="absolute inset-0 bg-gradient-to-b from-transparent to-black/40" />
+                )}
+              </div>
             </div>
-          </button>
+          ))}
         </div>
       </div>
     </div>

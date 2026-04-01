@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Music, Grid3X3, List, X, Play, Pause, Camera, Image, Heart, MoreVertical, Search } from 'lucide-react';
+import { Plus, Music, Grid3X3, List, X, Play, Pause, Camera, Image, Heart, MoreVertical, Search, Film } from 'lucide-react';
 import { useMusic, Track } from '@/contexts/MusicContext';
 import TrackOptionsSheet from '@/components/TrackOptionsSheet';
 
@@ -93,6 +93,20 @@ const Library = () => {
             className="w-full bg-card border border-border/20 rounded-xl pl-10 pr-4 py-3 text-sm placeholder:text-muted-foreground/60 focus:outline-none focus:ring-1 focus:ring-ring/30"
           />
         </div>
+
+        {/* Quick access to videos */}
+        <button
+          onClick={() => navigate('/videos')}
+          className="w-full flex items-center gap-3 p-3 rounded-xl bg-card border border-border/20 mb-2"
+        >
+          <div className="w-10 h-10 rounded-lg bg-primary/20 flex items-center justify-center">
+            <Film className="w-5 h-5 text-primary" />
+          </div>
+          <div className="flex-1 text-left">
+            <p className="text-sm font-semibold">Mes Vidéos</p>
+            <p className="text-xs text-muted-foreground">Vidéos importées localement</p>
+          </div>
+        </button>
 
         <input ref={fileInputRef} type="file" accept="audio/*" multiple onChange={handleFileSelect} className="hidden" />
       </header>

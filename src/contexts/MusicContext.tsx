@@ -73,12 +73,54 @@ const defaultProfile: UserProfile = {
   banner: 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=800&h=400&fit=crop',
 };
 
-// LocalStorage keys
+// IndexedDB helpers for audio persistence
+const AUDIO_DB = 'lumyvortex_audio_db';
+const AUDIO_STORE = 'audio_files';
+
+function openAudioDB(): Promise<IDBDatabase> {
+  return new Promise((resolve, reject) => {
+    const request = indexedDB.open(AUDIO_DB, 1);
+    request.onupgradeneeded = () => {
+      const db = request.result;
+      if (!db.objectStoreNames.contains(AUDIO_STORE)) {
+        db.createObjectStore(AUDIO_STORE);
+      }
+    };
+    request.onsuccess = () => resolve(request.result);
+    request.onerror = () => reject(request.error);
+  });
+}
+
+async function saveAudioBlob(id: string, blob: Blob) {
+  const db = await openAudioDB();
+  const tx = db.transaction(AUDIO_STORE, 'readwrite');
+  tx.objectStore(AUDIO_STORE).put(blob, id);
+  return new Promise<void>((resolve, reject) => {
+    tx.oncomplete = () => resolve();
+    tx.onerror = () => reject(tx.error);
+  });
+}
+
+async function getAudioBlob(id: string): Promise<Blob | null> {
+  const db = await openAudioDB();
+  const tx = db.transaction(AUDIO_STORE, 'readonly');
+  const request = tx.objectStore(AUDIO_STORE).get(id);
+  return new Promise((resolve, reject) => {
+    request.onsuccess = () => resolve(request.result || null);
+    request.onerror = () => reject(request.error);
+  });
+}
+
+async function deleteAudioBlob(id: string) {
+  const db = await openAudioDB();
+  const tx = db.transaction(AUDIO_STORE, 'readwrite');
+  tx.objectStore(AUDIO_STORE).delete(id);
+}
+
 const STORAGE_KEYS = {
   TRACKS: 'music_app_tracks',
   PLAYLISTS: 'music_app_playlists',
   PROFILE: 'music_app_profile',
-  TRACK_URLS: 'music_app_track_urls',
 };
 
 export const MusicProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -116,19 +158,11 @@ export const MusicProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     }
   });
 
-  // Store track audio URLs separately (blob URLs can't be serialized)
-  const [trackUrls, setTrackUrls] = useState<Record<string, string>>(() => {
-    try {
-      const saved = localStorage.getItem(STORAGE_KEYS.TRACK_URLS);
-      return saved ? JSON.parse(saved) : {};
-    } catch {
-      return {};
-    }
-  });
+  // In-memory blob URL cache
+  const blobUrlCache = useRef<Record<string, string>>({});
   
   const audioRef = useRef<HTMLAudioElement>(null);
 
-  // Save to localStorage whenever data changes
   useEffect(() => {
     localStorage.setItem(STORAGE_KEYS.TRACKS, JSON.stringify(tracks));
   }, [tracks]);
@@ -170,9 +204,21 @@ export const MusicProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     }
   }, [volume]);
 
+  // Get a playable URL for a track (from cache or IndexedDB)
+  const getTrackUrl = async (trackId: string): Promise<string> => {
+    if (blobUrlCache.current[trackId]) return blobUrlCache.current[trackId];
+    const blob = await getAudioBlob(trackId);
+    if (blob) {
+      const url = URL.createObjectURL(blob);
+      blobUrlCache.current[trackId] = url;
+      return url;
+    }
+    return '';
+  };
+
   const addTrack = async (file: File) => {
-    const url = URL.createObjectURL(file);
-    const audio = new Audio(url);
+    const tempUrl = URL.createObjectURL(file);
+    const audio = new Audio(tempUrl);
     
     await new Promise((resolve) => {
       audio.addEventListener('loadedmetadata', resolve);
@@ -180,22 +226,26 @@ export const MusicProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
     const fileName = file.name.replace(/\.[^/.]+$/, '');
     const parts = fileName.split(' - ');
-    
     const trackId = Date.now().toString();
+
+    // Save audio file to IndexedDB for persistence
+    await saveAudioBlob(trackId, file);
+
+    const blobUrl = URL.createObjectURL(file);
+    blobUrlCache.current[trackId] = blobUrl;
+    URL.revokeObjectURL(tempUrl);
     
     const newTrack: Track = {
       id: trackId,
       title: parts.length > 1 ? parts[1] : fileName,
-      artist: parts.length > 1 ? parts[0] : 'Unknown artist',
-      album: 'Unknown album',
+      artist: parts.length > 1 ? parts[0] : 'Artiste inconnu',
+      album: 'Album inconnu',
       duration: audio.duration,
       cover: defaultCovers[Math.floor(Math.random() * defaultCovers.length)],
-      url: url,
+      url: '', // URL is resolved dynamically from IndexedDB
       isFavorite: false,
     };
 
-    // Store the blob URL in memory for this session
-    setTrackUrls(prev => ({ ...prev, [trackId]: url }));
     setTracks((prev) => [...prev, newTrack]);
   };
 
@@ -205,20 +255,16 @@ export const MusicProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       setCurrentTrack(null);
       setIsPlaying(false);
     }
-    // Clean up the blob URL
-    if (trackUrls[id]) {
-      URL.revokeObjectURL(trackUrls[id]);
-      setTrackUrls(prev => {
-        const updated = { ...prev };
-        delete updated[id];
-        return updated;
-      });
+    deleteAudioBlob(id);
+    if (blobUrlCache.current[id]) {
+      URL.revokeObjectURL(blobUrlCache.current[id]);
+      delete blobUrlCache.current[id];
     }
   };
 
-  const playTrack = (track: Track) => {
-    // Use stored URL if available, otherwise use track.url
-    const url = trackUrls[track.id] || track.url;
+  const playTrack = async (track: Track) => {
+    const url = await getTrackUrl(track.id);
+    if (!url) return;
     const trackWithUrl = { ...track, url };
     setCurrentTrack(trackWithUrl);
     setIsPlaying(true);
@@ -232,7 +278,6 @@ export const MusicProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   const togglePlay = () => {
     if (!currentTrack) return;
-    
     if (isPlaying) {
       audioRef.current?.pause();
     } else {
@@ -244,7 +289,6 @@ export const MusicProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const getNextIndex = () => {
     if (!currentTrack || tracks.length === 0) return 0;
     const currentIndex = tracks.findIndex((t) => t.id === currentTrack.id);
-    
     if (shuffle) {
       let randomIndex;
       do {
@@ -252,7 +296,6 @@ export const MusicProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       } while (randomIndex === currentIndex && tracks.length > 1);
       return randomIndex;
     }
-    
     return (currentIndex + 1) % tracks.length;
   };
 
@@ -264,12 +307,10 @@ export const MusicProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   const prevTrack = () => {
     if (tracks.length === 0 || !currentTrack) return;
-    
     if (currentTime > 3) {
       seek(0);
       return;
     }
-    
     const currentIndex = tracks.findIndex((t) => t.id === currentTrack.id);
     const prevIndex = currentIndex === 0 ? tracks.length - 1 : currentIndex - 1;
     playTrack(tracks[prevIndex]);
@@ -282,10 +323,7 @@ export const MusicProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     }
   };
 
-  const setVolume = (vol: number) => {
-    setVolumeState(vol);
-  };
-
+  const setVolume = (vol: number) => setVolumeState(vol);
   const toggleShuffle = () => setShuffle(!shuffle);
 
   const toggleRepeat = () => {

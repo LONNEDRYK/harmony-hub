@@ -181,32 +181,30 @@ const Record = () => {
       </div>
 
       {/* Bottom stories/recent section */}
-      <div className="bg-black px-4 py-4 pb-safe">
-        <div className="flex gap-3 overflow-x-auto scrollbar-hide">
+      <div className="bg-black px-4 py-2 pb-safe">
+        <div className="flex gap-2 overflow-x-auto scrollbar-hide">
           {[
             { time: '2h', color: 'bg-muted/20', hasImage: true },
             { time: '1h', color: 'bg-primary/30', hasAvatar: true },
-            { time: '1m', color: 'bg-primary', hasText: true, text: 'Nouveau morceau disponible !' },
+            { time: '1m', color: 'bg-primary', hasText: true, text: 'Nouveau morceau !' },
             { time: 'now', color: 'bg-muted/20', hasFile: true, file: 'audio_mix.mp3' },
           ].map((item, i) => (
             <div
               key={i}
-              className={`flex-shrink-0 w-[120px] h-[120px] rounded-2xl ${item.color} relative overflow-hidden flex flex-col justify-between p-3`}
+              className={`flex-shrink-0 w-[80px] h-[80px] rounded-xl ${item.color} relative overflow-hidden flex flex-col justify-between p-2`}
             >
-              <span className="text-xs font-semibold text-green-400 self-end">{item.time}</span>
+              <span className="text-[9px] font-semibold text-green-400 self-end">{item.time}</span>
               <div className="flex-1 flex items-center justify-center">
                 {item.hasAvatar && (
-                  <div className="w-12 h-12 rounded-full bg-primary/40 border-2 border-primary/60" />
+                  <div className="w-8 h-8 rounded-full bg-primary/40 border-2 border-primary/60" />
                 )}
                 {item.hasText && (
-                  <p className="text-xs text-white font-medium leading-tight text-center">{item.text}</p>
+                  <p className="text-[9px] text-white font-medium leading-tight text-center">{item.text}</p>
                 )}
                 {item.hasFile && (
                   <div className="text-center">
-                    <div className="w-10 h-12 bg-muted/30 rounded-lg mx-auto mb-1 flex items-center justify-center">
-                      <Paperclip className="w-4 h-4 text-muted-foreground" />
-                    </div>
-                    <p className="text-[10px] text-muted-foreground">{item.file}</p>
+                    <Paperclip className="w-3 h-3 text-muted-foreground mx-auto mb-0.5" />
+                    <p className="text-[8px] text-muted-foreground">{item.file}</p>
                   </div>
                 )}
                 {item.hasImage && (

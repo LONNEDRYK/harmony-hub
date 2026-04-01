@@ -4,6 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import { MusicProvider } from "@/contexts/MusicContext";
+import { VideoProvider } from "@/contexts/VideoContext";
 import BottomNav from "@/components/BottomNav";
 import MiniPlayer from "@/components/MiniPlayer";
 import WelcomeScreen from "@/components/WelcomeScreen";
@@ -17,6 +18,8 @@ import Notifications from "./pages/Notifications";
 import PlaylistDetail from "./pages/PlaylistDetail";
 import NotFound from "./pages/NotFound";
 import Record from "./pages/Record";
+import Videos from "./pages/Videos";
+import VideoPlayer from "./pages/VideoPlayer";
 import { useState } from "react";
 
 const queryClient = new QueryClient();
@@ -26,7 +29,7 @@ const AppContent = () => {
   const [welcomeComplete, setWelcomeComplete] = useState(() => {
     return localStorage.getItem('musicflow_welcome_seen') === 'true';
   });
-  const hideNav = ['/player', '/record'].includes(location.pathname);
+  const hideNav = ['/player', '/record', '/video-player'].includes(location.pathname);
 
   return (
     <div className="w-full max-w-4xl mx-auto min-h-screen relative overflow-x-hidden">
@@ -43,6 +46,8 @@ const AppContent = () => {
         <Route path="/notifications" element={<Notifications />} />
         <Route path="/playlist/:id" element={<PlaylistDetail />} />
         <Route path="/record" element={<Record />} />
+        <Route path="/videos" element={<Videos />} />
+        <Route path="/video-player" element={<VideoPlayer />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
       {!hideNav && welcomeComplete && (
@@ -59,11 +64,13 @@ const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
       <MusicProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <AppContent />
-        </BrowserRouter>
+        <VideoProvider>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
+            <AppContent />
+          </BrowserRouter>
+        </VideoProvider>
       </MusicProvider>
     </TooltipProvider>
   </QueryClientProvider>

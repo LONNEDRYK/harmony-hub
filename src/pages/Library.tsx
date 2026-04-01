@@ -94,6 +94,20 @@ const Library = () => {
           />
         </div>
 
+        {/* Quick access to videos */}
+        <button
+          onClick={() => navigate('/videos')}
+          className="w-full flex items-center gap-3 p-3 rounded-xl bg-card border border-border/20 mb-2"
+        >
+          <div className="w-10 h-10 rounded-lg bg-primary/20 flex items-center justify-center">
+            <Film className="w-5 h-5 text-primary" />
+          </div>
+          <div className="flex-1 text-left">
+            <p className="text-sm font-semibold">Mes Vidéos</p>
+            <p className="text-xs text-muted-foreground">Vidéos importées localement</p>
+          </div>
+        </button>
+
         <input ref={fileInputRef} type="file" accept="audio/*" multiple onChange={handleFileSelect} className="hidden" />
       </header>
 

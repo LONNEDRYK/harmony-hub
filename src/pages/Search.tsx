@@ -35,10 +35,10 @@ const Search = () => {
   );
 
   return (
-    <div className="min-h-screen pb-36 bg-background">
+    <div className="min-h-screen pb-32 bg-background">
       {/* Header avec titre */}
-      <header className="px-5 pt-12 pb-4">
-        <h1 className="text-2xl font-bold mb-5">Découvrir</h1>
+      <header className="px-4 pt-12 pb-3">
+        <h1 className="text-lg font-bold mb-3">Découvrir</h1>
         
         {/* Barre de recherche */}
         <div className="relative">

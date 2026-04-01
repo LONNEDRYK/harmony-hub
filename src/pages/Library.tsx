@@ -66,10 +66,10 @@ const Library = () => {
   return (
     <div className="min-h-screen pb-36 bg-background">
       {/* Header */}
-      <header className="px-5 pt-14 pb-2">
-        <div className="flex items-center justify-between mb-4">
+      <header className="px-4 pt-12 pb-2">
+        <div className="flex items-center justify-between mb-3">
           <div>
-            <h1 className="text-xl font-bold leading-tight">Bibliothèque</h1>
+            <h1 className="text-lg font-bold leading-tight">Bibliothèque</h1>
             <p className="text-xs text-muted-foreground mt-1">
               {tracks.length} titre{tracks.length !== 1 ? 's' : ''} • {playlists.length} playlist{playlists.length !== 1 ? 's' : ''}
             </p>

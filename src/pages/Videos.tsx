@@ -34,9 +34,9 @@ const Videos = () => {
   return (
     <div className="min-h-screen bg-background pb-32">
       {/* Header */}
-      <div className="px-5 pt-safe">
-        <div className="flex items-center justify-between py-4">
-          <h1 className="text-2xl font-bold text-foreground">Mes Vidéos</h1>
+      <div className="px-4 pt-12">
+        <div className="flex items-center justify-between py-3">
+          <h1 className="text-lg font-bold text-foreground">Mes Vidéos</h1>
           <button
             onClick={() => fileRef.current?.click()}
             disabled={importing}

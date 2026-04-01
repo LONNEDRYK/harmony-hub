@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Music, Grid3X3, List, X, Play, Pause, Camera, Image, Heart, MoreVertical, Search } from 'lucide-react';
+import { Plus, Music, Grid3X3, List, X, Play, Pause, Camera, Image, Heart, MoreVertical, Search, Film } from 'lucide-react';
 import { useMusic, Track } from '@/contexts/MusicContext';
 import TrackOptionsSheet from '@/components/TrackOptionsSheet';
 

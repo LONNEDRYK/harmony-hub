@@ -77,14 +77,18 @@ const defaultProfile: UserProfile = {
 // IndexedDB helpers for audio persistence
 const AUDIO_DB = 'lumyvortex_audio_db';
 const AUDIO_STORE = 'audio_files';
+const IMAGE_STORE = 'image_files';
 
 function openAudioDB(): Promise<IDBDatabase> {
   return new Promise((resolve, reject) => {
-    const request = indexedDB.open(AUDIO_DB, 1);
+    const request = indexedDB.open(AUDIO_DB, 2);
     request.onupgradeneeded = () => {
       const db = request.result;
       if (!db.objectStoreNames.contains(AUDIO_STORE)) {
         db.createObjectStore(AUDIO_STORE);
+      }
+      if (!db.objectStoreNames.contains(IMAGE_STORE)) {
+        db.createObjectStore(IMAGE_STORE);
       }
     };
     request.onsuccess = () => resolve(request.result);
@@ -116,6 +120,26 @@ async function deleteAudioBlob(id: string) {
   const db = await openAudioDB();
   const tx = db.transaction(AUDIO_STORE, 'readwrite');
   tx.objectStore(AUDIO_STORE).delete(id);
+}
+
+async function saveImageBlob(key: string, blob: Blob) {
+  const db = await openAudioDB();
+  const tx = db.transaction(IMAGE_STORE, 'readwrite');
+  tx.objectStore(IMAGE_STORE).put(blob, key);
+  return new Promise<void>((resolve, reject) => {
+    tx.oncomplete = () => resolve();
+    tx.onerror = () => reject(tx.error);
+  });
+}
+
+async function getImageBlob(key: string): Promise<Blob | null> {
+  const db = await openAudioDB();
+  const tx = db.transaction(IMAGE_STORE, 'readonly');
+  const request = tx.objectStore(IMAGE_STORE).get(key);
+  return new Promise((resolve, reject) => {
+    request.onsuccess = () => resolve(request.result || null);
+    request.onerror = () => reject(request.error);
+  });
 }
 
 const STORAGE_KEYS = {

@@ -388,16 +388,16 @@ const Settings = () => {
   ];
 
   return (
-    <div className="min-h-screen pb-36 bg-background overflow-hidden">
-      <header className="sticky top-0 z-10 p-4 pt-safe bg-background/95 backdrop-blur-sm border-b border-border/20">
+    <div className="min-h-screen pb-32 bg-background overflow-hidden">
+      <header className="sticky top-0 z-10 p-4 pt-11 bg-background/95 backdrop-blur-sm border-b border-border/20">
         <div className="flex items-center gap-3 max-w-lg mx-auto">
           <button
             onClick={() => navigate(-1)}
-            className="w-9 h-9 rounded-full bg-white/10 flex items-center justify-center"
+            className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center"
           >
-            <ChevronLeft className="w-5 h-5" />
+            <ChevronLeft className="w-4 h-4" />
           </button>
-          <h1 className="text-lg font-bold">Paramètres</h1>
+          <h1 className="text-base font-bold">Paramètres</h1>
         </div>
       </header>
 

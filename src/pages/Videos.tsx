@@ -1,6 +1,6 @@
 import { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Play, Trash2, Film, Clock } from 'lucide-react';
+import { Plus, Play, Trash2, Film } from 'lucide-react';
 import { useVideo } from '@/contexts/VideoContext';
 
 const formatDuration = (s: number) => {
@@ -33,14 +33,13 @@ const Videos = () => {
 
   return (
     <div className="min-h-screen bg-background pb-32">
-      {/* Header */}
-      <div className="px-4 pt-12">
+      <div className="px-4 pt-11">
         <div className="flex items-center justify-between py-3">
-          <h1 className="text-lg font-bold text-foreground">Mes Vidéos</h1>
+          <h1 className="text-base font-bold text-foreground">Mes Vidéos</h1>
           <button
             onClick={() => fileRef.current?.click()}
             disabled={importing}
-            className="flex items-center gap-2 px-4 py-2 rounded-full bg-primary text-primary-foreground font-medium text-sm"
+            className="flex items-center gap-2 px-4 py-2 rounded-full bg-primary text-primary-foreground font-medium text-xs"
           >
             <Plus className="w-4 h-4" />
             {importing ? 'Import...' : 'Importer'}
@@ -48,66 +47,54 @@ const Videos = () => {
         </div>
       </div>
 
-      <input
-        ref={fileRef}
-        type="file"
-        accept="video/*"
-        multiple
-        className="hidden"
-        onChange={handleImport}
-      />
+      <input ref={fileRef} type="file" accept="video/*" multiple className="hidden" onChange={handleImport} />
 
       {videos.length === 0 ? (
-        <div className="flex flex-col items-center justify-center px-8 py-20">
-          <Film className="w-16 h-16 text-muted-foreground/30 mb-4" />
-          <p className="text-lg font-medium text-muted-foreground mb-2">Aucune vidéo</p>
-          <p className="text-sm text-muted-foreground/70 text-center mb-6">
+        <div className="flex flex-col items-center justify-center px-8 py-16">
+          <Film className="w-14 h-14 text-muted-foreground/30 mb-3" />
+          <p className="text-sm font-medium text-muted-foreground mb-1.5">Aucune vidéo</p>
+          <p className="text-xs text-muted-foreground/70 text-center mb-5">
             Importez vos vidéos locales pour les regarder ici
           </p>
           <button
             onClick={() => fileRef.current?.click()}
-            className="px-6 py-3 rounded-full bg-primary text-primary-foreground font-medium"
+            className="px-6 py-2.5 rounded-full bg-primary text-primary-foreground font-medium text-sm"
           >
             Importer des vidéos
           </button>
         </div>
       ) : (
-        <div className="px-5 space-y-3">
+        <div className="px-4 space-y-2">
           {videos.map((video) => (
             <div
               key={video.id}
               className="flex items-center gap-3 p-2 rounded-xl bg-card/50 active:bg-card/80 transition-colors"
             >
-              {/* Thumbnail */}
               <button
                 onClick={() => navigate(`/video-player?id=${video.id}`)}
-                className="relative flex-shrink-0 w-28 h-16 rounded-lg overflow-hidden bg-muted"
+                className="relative flex-shrink-0 w-24 h-14 rounded-lg overflow-hidden bg-muted"
               >
                 {video.thumbnail ? (
                   <img src={video.thumbnail} alt="" className="w-full h-full object-cover" />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center">
-                    <Film className="w-6 h-6 text-muted-foreground" />
+                    <Film className="w-5 h-5 text-muted-foreground" />
                   </div>
                 )}
                 <div className="absolute inset-0 flex items-center justify-center bg-black/20">
-                  <Play className="w-6 h-6 text-white" fill="currentColor" />
+                  <Play className="w-5 h-5 text-white" fill="currentColor" />
                 </div>
-                <span className="absolute bottom-1 right-1 text-[10px] bg-black/70 text-white px-1 rounded">
+                <span className="absolute bottom-0.5 right-0.5 text-[10px] bg-black/70 text-white px-1 rounded">
                   {formatDuration(video.duration)}
                 </span>
               </button>
-
-              {/* Info */}
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium text-foreground truncate">{video.title}</p>
                 <p className="text-xs text-muted-foreground">{formatSize(video.size)}</p>
               </div>
-
-              {/* Delete */}
               <button
                 onClick={() => removeVideo(video.id)}
-                className="w-9 h-9 flex items-center justify-center rounded-full hover:bg-destructive/10"
+                className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-destructive/10"
               >
                 <Trash2 className="w-4 h-4 text-muted-foreground" />
               </button>

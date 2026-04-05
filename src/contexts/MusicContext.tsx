@@ -54,6 +54,7 @@ interface MusicContextType {
   updateUserProfile: (profile: Partial<UserProfile>) => void;
   updateTrackCover: (trackId: string, coverUrl: string) => void;
   updatePlaylistCover: (playlistId: string, coverUrl: string) => void;
+  saveImageToLocal: (key: string, file: File) => Promise<string>;
   audioRef: React.RefObject<HTMLAudioElement>;
 }
 

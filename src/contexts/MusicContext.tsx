@@ -417,6 +417,29 @@ export const MusicProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     );
   };
 
+  const saveImageToLocal = async (key: string, file: File): Promise<string> => {
+    await saveImageBlob(key, file);
+    const url = URL.createObjectURL(file);
+    return url;
+  };
+
+  // Restore images from IndexedDB on mount
+  useEffect(() => {
+    const restoreImages = async () => {
+      const avatarBlob = await getImageBlob('profile_avatar');
+      if (avatarBlob) {
+        const url = URL.createObjectURL(avatarBlob);
+        setUserProfile(prev => ({ ...prev, avatar: url }));
+      }
+      const bannerBlob = await getImageBlob('profile_banner');
+      if (bannerBlob) {
+        const url = URL.createObjectURL(bannerBlob);
+        setUserProfile(prev => ({ ...prev, banner: url }));
+      }
+    };
+    restoreImages();
+  }, []);
+
   return (
     <MusicContext.Provider
       value={{
@@ -447,6 +470,7 @@ export const MusicProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         updateUserProfile,
         updateTrackCover,
         updatePlaylistCover,
+        saveImageToLocal,
         audioRef,
       }}
     >

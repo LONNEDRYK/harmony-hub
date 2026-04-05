@@ -1,7 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import {
   ChevronDown,
-  Heart,
   MoreVertical,
   SkipBack,
   Play,
@@ -12,9 +11,11 @@ import {
   ListMusic,
   Volume2,
   Star,
+  MessageCircle,
+  Radio,
 } from 'lucide-react';
 import { useMusic } from '@/contexts/MusicContext';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import TrackOptionsSheet from '@/components/TrackOptionsSheet';
 
 const formatTime = (seconds: number) => {
@@ -66,57 +67,68 @@ const Player = () => {
 
   return (
     <div className="h-screen flex flex-col relative overflow-hidden">
-      {/* Album art as full background */}
+      {/* Album art as full background with BLUR */}
       <div className="absolute inset-0">
+        <img
+          src={currentTrack.cover}
+          alt=""
+          className="w-full h-full object-cover scale-110 blur-md"
+        />
+        <div className="absolute inset-0 bg-black/30" />
+      </div>
+
+      {/* Album art centered (non-blurred) */}
+      <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
         <img
           src={currentTrack.cover}
           alt=""
           className="w-full h-full object-cover"
         />
-        {/* Dark gradient overlay from bottom */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent" />
       </div>
+
+      {/* Dark gradient from bottom */}
+      <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/30 to-black/10" />
 
       {/* Content */}
       <div className="relative flex-1 flex flex-col">
-        {/* Header */}
-        <header className="flex items-center justify-between px-5 py-4 pt-safe">
+        {/* Header - small notch bar */}
+        <header className="flex items-center justify-center px-5 py-3 pt-safe">
           <button
             onClick={() => navigate(-1)}
-            className="w-10 h-10 rounded-full bg-black/30 backdrop-blur flex items-center justify-center"
+            className="absolute left-4 top-3 w-8 h-8 rounded-full bg-black/30 backdrop-blur flex items-center justify-center"
           >
-            <ChevronDown className="w-6 h-6 text-white" />
+            <ChevronDown className="w-5 h-5 text-white" />
           </button>
-          <div className="w-10" />
+          <div className="w-10 h-1 rounded-full bg-white/30" />
         </header>
 
-        {/* Spacer to push content down */}
+        {/* Spacer */}
         <div className="flex-1" />
 
-        {/* Track info overlay on album art */}
-        <div className="px-5 pb-2">
+        {/* Track info */}
+        <div className="px-5 pb-1">
           <div className="flex items-end justify-between">
             <div className="flex-1 min-w-0 pr-4">
-              <h1 className="text-2xl font-bold text-white truncate">{currentTrack.title}</h1>
-              <p className="text-white/70 text-base truncate">{currentTrack.artist}</p>
+              <h1 className="text-xl font-bold text-white truncate">{currentTrack.title}</h1>
+              <p className="text-white/60 text-sm truncate">{currentTrack.artist}</p>
             </div>
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2.5">
               <button onClick={() => toggleFavorite(currentTrack.id)}>
                 <Star
-                  className={`w-6 h-6 ${currentTrack.isFavorite ? 'text-yellow-400 fill-yellow-400' : 'text-white/60'}`}
+                  className={`w-5 h-5 ${currentTrack.isFavorite ? 'text-yellow-400 fill-yellow-400' : 'text-white/50'}`}
                 />
               </button>
               <button onClick={() => setShowOptions(true)}>
-                <MoreVertical className="w-6 h-6 text-white/60" />
+                <MoreVertical className="w-5 h-5 text-white/50" />
               </button>
             </div>
           </div>
         </div>
 
         {/* Progress Bar */}
-        <div className="px-5 py-3">
+        <div className="px-5 py-2.5">
           <div
-            className="h-1 bg-white/20 rounded-full cursor-pointer overflow-hidden"
+            className="h-[3px] bg-white/20 rounded-full cursor-pointer overflow-hidden"
             onClick={handleProgressClick}
           >
             <div
@@ -124,78 +136,63 @@ const Player = () => {
               style={{ width: `${progress}%` }}
             />
           </div>
-          <div className="flex justify-between text-xs text-white/50 mt-2 font-medium">
+          <div className="flex justify-between text-[10px] text-white/40 mt-1.5 font-medium">
             <span>{formatTime(currentTime)}</span>
             <span>-{formatTime(remaining)}</span>
           </div>
         </div>
 
-        {/* Main Controls - large */}
-        <div className="flex items-center justify-center gap-12 py-4 px-5">
-          <button
-            onClick={prevTrack}
-            className="w-14 h-14 flex items-center justify-center"
-          >
-            <SkipBack className="w-10 h-10 text-white" fill="currentColor" />
+        {/* Main Controls */}
+        <div className="flex items-center justify-center gap-10 py-3 px-5">
+          <button onClick={prevTrack} className="w-12 h-12 flex items-center justify-center">
+            <SkipBack className="w-8 h-8 text-white" fill="currentColor" />
           </button>
-
-          <button
-            onClick={togglePlay}
-            className="w-16 h-16 flex items-center justify-center"
-          >
+          <button onClick={togglePlay} className="w-14 h-14 flex items-center justify-center">
             {isPlaying ? (
-              <Pause className="w-14 h-14 text-white" fill="currentColor" />
+              <Pause className="w-12 h-12 text-white" fill="currentColor" />
             ) : (
-              <Play className="w-14 h-14 text-white ml-1" fill="currentColor" />
+              <Play className="w-12 h-12 text-white ml-1" fill="currentColor" />
             )}
           </button>
-
-          <button
-            onClick={nextTrack}
-            className="w-14 h-14 flex items-center justify-center"
-          >
-            <SkipForward className="w-10 h-10 text-white" fill="currentColor" />
+          <button onClick={nextTrack} className="w-12 h-12 flex items-center justify-center">
+            <SkipForward className="w-8 h-8 text-white" fill="currentColor" />
           </button>
         </div>
 
         {/* Volume Slider */}
-        <div className="px-5 pb-4 flex items-center gap-3">
-          <Volume2 className="w-4 h-4 text-white/40 flex-shrink-0" />
+        <div className="px-5 pb-3 flex items-center gap-2.5">
+          <Volume2 className="w-3.5 h-3.5 text-white/30 flex-shrink-0" />
           <div
-            className="flex-1 h-1 bg-white/20 rounded-full cursor-pointer overflow-hidden"
+            className="flex-1 h-[3px] bg-white/15 rounded-full cursor-pointer overflow-hidden"
             onClick={handleVolumeClick}
           >
             <div
-              className="h-full bg-white/60 rounded-full"
+              className="h-full bg-white/50 rounded-full"
               style={{ width: `${volume * 100}%` }}
             />
           </div>
         </div>
 
-        {/* Bottom row */}
-        <div className="flex items-center justify-center gap-16 pb-6 pb-safe">
+        {/* Bottom icons row - chat, broadcast/radio, shuffle/repeat, queue */}
+        <div className="flex items-center justify-center gap-12 pb-5 pb-safe">
+          <button className="text-white/40">
+            <MessageCircle className="w-4.5 h-4.5" />
+          </button>
+          <button className="text-white/40">
+            <Radio className="w-4.5 h-4.5" />
+          </button>
           <button
             onClick={toggleShuffle}
             className={`${shuffle ? 'text-white' : 'text-white/40'}`}
           >
-            <Shuffle className="w-5 h-5" />
-          </button>
-          <button
-            onClick={toggleRepeat}
-            className={`relative ${repeat !== 'off' ? 'text-white' : 'text-white/40'}`}
-          >
-            <Repeat className="w-5 h-5" />
-            {repeat === 'one' && (
-              <span className="absolute text-[8px] font-bold top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 mt-0.5">1</span>
-            )}
+            <Shuffle className="w-4.5 h-4.5" />
           </button>
           <button className="text-white/40">
-            <ListMusic className="w-5 h-5" />
+            <ListMusic className="w-4.5 h-4.5" />
           </button>
         </div>
       </div>
 
-      {/* Options Sheet */}
       <TrackOptionsSheet
         track={currentTrack}
         isOpen={showOptions}

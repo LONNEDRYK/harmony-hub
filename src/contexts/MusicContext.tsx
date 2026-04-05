@@ -54,6 +54,7 @@ interface MusicContextType {
   updateUserProfile: (profile: Partial<UserProfile>) => void;
   updateTrackCover: (trackId: string, coverUrl: string) => void;
   updatePlaylistCover: (playlistId: string, coverUrl: string) => void;
+  saveImageToLocal: (key: string, file: File) => Promise<string>;
   audioRef: React.RefObject<HTMLAudioElement>;
 }
 
@@ -76,14 +77,18 @@ const defaultProfile: UserProfile = {
 // IndexedDB helpers for audio persistence
 const AUDIO_DB = 'lumyvortex_audio_db';
 const AUDIO_STORE = 'audio_files';
+const IMAGE_STORE = 'image_files';
 
 function openAudioDB(): Promise<IDBDatabase> {
   return new Promise((resolve, reject) => {
-    const request = indexedDB.open(AUDIO_DB, 1);
+    const request = indexedDB.open(AUDIO_DB, 2);
     request.onupgradeneeded = () => {
       const db = request.result;
       if (!db.objectStoreNames.contains(AUDIO_STORE)) {
         db.createObjectStore(AUDIO_STORE);
+      }
+      if (!db.objectStoreNames.contains(IMAGE_STORE)) {
+        db.createObjectStore(IMAGE_STORE);
       }
     };
     request.onsuccess = () => resolve(request.result);
@@ -115,6 +120,26 @@ async function deleteAudioBlob(id: string) {
   const db = await openAudioDB();
   const tx = db.transaction(AUDIO_STORE, 'readwrite');
   tx.objectStore(AUDIO_STORE).delete(id);
+}
+
+async function saveImageBlob(key: string, blob: Blob) {
+  const db = await openAudioDB();
+  const tx = db.transaction(IMAGE_STORE, 'readwrite');
+  tx.objectStore(IMAGE_STORE).put(blob, key);
+  return new Promise<void>((resolve, reject) => {
+    tx.oncomplete = () => resolve();
+    tx.onerror = () => reject(tx.error);
+  });
+}
+
+async function getImageBlob(key: string): Promise<Blob | null> {
+  const db = await openAudioDB();
+  const tx = db.transaction(IMAGE_STORE, 'readonly');
+  const request = tx.objectStore(IMAGE_STORE).get(key);
+  return new Promise((resolve, reject) => {
+    request.onsuccess = () => resolve(request.result || null);
+    request.onerror = () => reject(request.error);
+  });
 }
 
 const STORAGE_KEYS = {
@@ -392,6 +417,29 @@ export const MusicProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     );
   };
 
+  const saveImageToLocal = async (key: string, file: File): Promise<string> => {
+    await saveImageBlob(key, file);
+    const url = URL.createObjectURL(file);
+    return url;
+  };
+
+  // Restore images from IndexedDB on mount
+  useEffect(() => {
+    const restoreImages = async () => {
+      const avatarBlob = await getImageBlob('profile_avatar');
+      if (avatarBlob) {
+        const url = URL.createObjectURL(avatarBlob);
+        setUserProfile(prev => ({ ...prev, avatar: url }));
+      }
+      const bannerBlob = await getImageBlob('profile_banner');
+      if (bannerBlob) {
+        const url = URL.createObjectURL(bannerBlob);
+        setUserProfile(prev => ({ ...prev, banner: url }));
+      }
+    };
+    restoreImages();
+  }, []);
+
   return (
     <MusicContext.Provider
       value={{
@@ -422,6 +470,7 @@ export const MusicProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         updateUserProfile,
         updateTrackCover,
         updatePlaylistCover,
+        saveImageToLocal,
         audioRef,
       }}
     >

@@ -1,12 +1,11 @@
 import { useNavigate } from 'react-router-dom';
-import { Bell, Play, Pause, Heart, Music, Film, ChevronRight } from 'lucide-react';
+import { Play, Pause, Heart, Music, Search } from 'lucide-react';
 import { useMusic } from '@/contexts/MusicContext';
-import { useVideo } from '@/contexts/VideoContext';
+import lumyLogo from '@/assets/lumyvortex-logo.png';
 
 const Index = () => {
   const navigate = useNavigate();
-  const { tracks, currentTrack, isPlaying, playTrack, togglePlay, playlists, userProfile } = useMusic();
-  const { videos } = useVideo();
+  const { tracks, currentTrack, isPlaying, playTrack, togglePlay, userProfile } = useMusic();
 
   const favorites = tracks.filter(t => t.isFavorite);
 
@@ -15,92 +14,85 @@ const Index = () => {
     else playTrack(track);
   };
 
-  const featuredTrack = tracks[0];
-
   return (
     <div className="min-h-screen pb-28 bg-background">
-      {/* Hero Banner */}
-      {featuredTrack ? (
-        <div className="relative">
-          <div className="h-52 w-full overflow-hidden">
-            <img src={featuredTrack.cover} alt="" className="w-full h-full object-cover" />
+      {/* Header */}
+      <header className="px-4 pt-11 pb-2">
+        <div className="flex items-center justify-between mb-5">
+          {/* Logo */}
+          <div className="flex items-center gap-2">
+            <img src={lumyLogo} alt="LumyVortex" className="h-7 w-auto" />
+            <span className="text-base font-bold tracking-tight">LumyVortex</span>
           </div>
-          <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-background" />
-
-          <div className="absolute top-0 left-0 right-0 flex items-center justify-between px-4 pt-11">
-            <button onClick={() => navigate('/profile')} className="w-8 h-8 rounded-full overflow-hidden ring-2 ring-white/30">
-              <img src={userProfile.avatar} alt="" className="w-full h-full object-cover" />
-            </button>
+          {/* Icons */}
+          <div className="flex items-center gap-2.5">
             <button
               onClick={() => navigate('/notifications')}
-              className="w-8 h-8 rounded-full bg-black/30 backdrop-blur flex items-center justify-center relative"
+              className="w-9 h-9 rounded-full bg-foreground flex items-center justify-center relative"
             >
-              <Bell className="w-4 h-4 text-white" />
-              {(tracks.length > 0 || videos.length > 0) && (
-                <div className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full bg-red-500" />
-              )}
+              {/* Bell SVG */}
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-background">
+                <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/>
+                <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/>
+              </svg>
             </button>
-          </div>
-
-          <div className="absolute bottom-4 left-4 right-4">
-            <div className="flex items-center gap-2 mb-1">
-              <div className="w-5 h-5 rounded-full bg-foreground flex items-center justify-center">
-                <Music className="w-3 h-3 text-background" />
-              </div>
-              <span className="text-white text-xs font-medium">LumyVortex Music</span>
-            </div>
-            <h1 className="text-white text-lg font-bold">{userProfile.name}</h1>
-            <p className="text-white/60 text-xs">{tracks.length} tracks · {playlists.length} albums</p>
+            <button
+              onClick={() => navigate('/settings')}
+              className="w-9 h-9 rounded-full bg-foreground flex items-center justify-center"
+            >
+              {/* Chat/More SVG */}
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" className="text-background">
+                <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/>
+              </svg>
+            </button>
           </div>
         </div>
-      ) : (
-        <header className="px-4 pt-11 pb-3 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <button onClick={() => navigate('/profile')} className="w-8 h-8 rounded-full overflow-hidden ring-2 ring-border/40">
-              <img src={userProfile.avatar} alt="" className="w-full h-full object-cover" />
-            </button>
-            <div>
-              <p className="text-xs text-muted-foreground leading-none mb-0.5">Bonjour 👋</p>
-              <h1 className="text-sm font-bold leading-none">{userProfile.name}</h1>
-            </div>
-          </div>
-          <button
-            onClick={() => navigate('/notifications')}
-            className="w-8 h-8 rounded-full bg-card border border-border/20 flex items-center justify-center"
-          >
-            <Bell className="w-4 h-4 text-muted-foreground" />
-          </button>
-        </header>
-      )}
 
-      {/* New Releases */}
+        {/* Greeting */}
+        <div className="mb-4">
+          <h1 className="text-xl font-bold">Salut, {userProfile.name}</h1>
+          <p className="text-sm text-muted-foreground">Quelle audio allez-vous écouter ?</p>
+        </div>
+
+        {/* Search bar */}
+        <button
+          onClick={() => navigate('/search')}
+          className="w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-card border border-border/20 mb-5"
+        >
+          <Search className="w-4 h-4 text-muted-foreground" />
+          <span className="text-sm text-muted-foreground">Recherche un fichier local (son)</span>
+        </button>
+      </header>
+
+      {/* Recommander */}
       {tracks.length > 0 && (
-        <section className="px-4 mt-4 mb-4">
-          <div className="flex items-center justify-between mb-2.5">
-            <h2 className="text-sm font-bold">New releases</h2>
-            <button onClick={() => navigate('/library')} className="text-xs text-muted-foreground px-2.5 py-1 rounded-full border border-border/20">
-              View All
-            </button>
+        <section className="px-4 mb-5">
+          <div className="flex items-center gap-2 mb-3">
+            <h2 className="text-base font-bold">Recommander</h2>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-muted-foreground">
+              <circle cx="12" cy="12" r="10"/>
+              <path d="M12 16v-4"/>
+              <path d="M12 8h.01"/>
+            </svg>
           </div>
-          <div className="flex gap-3 overflow-x-auto no-scrollbar -mx-4 px-4">
-            {tracks.slice(0, 8).map((track) => {
+          <div className="grid grid-cols-5 gap-2">
+            {tracks.slice(0, 10).map((track) => {
               const isActive = currentTrack?.id === track.id;
               return (
                 <button
                   key={track.id}
                   onClick={() => handleTrackPlay(track)}
-                  className="flex-shrink-0 w-32"
+                  className="flex flex-col items-start"
                 >
-                  <div className="relative w-32 h-32 rounded-xl overflow-hidden mb-1.5 bg-card">
+                  <div className="relative w-full aspect-square rounded-lg overflow-hidden mb-1 bg-card">
                     <img src={track.cover} alt={track.title} className="w-full h-full object-cover" />
                     {isActive && isPlaying && (
-                      <div className="absolute bottom-1.5 right-1.5 w-6 h-6 rounded-full bg-white flex items-center justify-center">
-                        <Pause className="w-3 h-3 text-background" fill="currentColor" />
+                      <div className="absolute inset-0 bg-black/30 flex items-center justify-center">
+                        <Pause className="w-4 h-4 text-white" fill="currentColor" />
                       </div>
                     )}
                   </div>
-                  <p className="text-xs font-semibold truncate">{track.title}</p>
-                  <p className="text-[11px] text-muted-foreground truncate">{track.artist}</p>
+                  <p className="text-xs font-medium truncate w-full text-left">{track.title}</p>
                 </button>
               );
             })}
@@ -108,144 +100,44 @@ const Index = () => {
         </section>
       )}
 
-      {/* Quick Picks */}
-      {tracks.length > 1 && (
-        <section className="px-4 mb-4">
-          <h2 className="text-sm font-bold mb-2.5">Écoute rapide</h2>
-          <div className="space-y-1">
-            {tracks.slice(0, 4).map((track) => {
+      {/* Favoris */}
+      {favorites.length > 0 && (
+        <section className="px-4 mb-5">
+          <h2 className="text-base font-bold mb-3">Favoris</h2>
+          <div className="grid grid-cols-5 gap-2">
+            {favorites.slice(0, 10).map((track) => {
               const isActive = currentTrack?.id === track.id;
               return (
                 <button
                   key={track.id}
                   onClick={() => handleTrackPlay(track)}
-                  className={`w-full flex items-center gap-3 py-2 px-2.5 rounded-xl transition-colors ${isActive ? 'bg-card' : ''}`}
+                  className="flex flex-col items-start"
                 >
-                  <img src={track.cover} alt={track.title} className="w-11 h-11 rounded-lg object-cover shrink-0" />
-                  <div className="flex-1 min-w-0 text-left">
-                    <p className="text-xs font-semibold truncate">{track.title}</p>
-                    <p className="text-[11px] text-muted-foreground truncate">{track.artist}</p>
+                  <div className="relative w-full aspect-square rounded-lg overflow-hidden mb-1 bg-card">
+                    <img src={track.cover} alt={track.title} className="w-full h-full object-cover" />
+                    {isActive && isPlaying && (
+                      <div className="absolute inset-0 bg-black/30 flex items-center justify-center">
+                        <Pause className="w-4 h-4 text-white" fill="currentColor" />
+                      </div>
+                    )}
                   </div>
-                  <div className="flex items-center gap-2 shrink-0">
-                    {track.isFavorite && <Heart className="w-3.5 h-3.5 text-red-500 fill-red-500" />}
-                    <div className="w-7 h-7 rounded-full bg-muted flex items-center justify-center">
-                      {isActive && isPlaying ? (
-                        <Pause className="w-3 h-3" fill="currentColor" />
-                      ) : (
-                        <Play className="w-3 h-3 ml-px" fill="currentColor" />
-                      )}
-                    </div>
-                  </div>
+                  <p className="text-xs font-medium truncate w-full text-left">{track.title}</p>
                 </button>
               );
             })}
-          </div>
-        </section>
-      )}
-
-      {/* Videos */}
-      {videos.length > 0 && (
-        <section className="px-4 mb-4">
-          <div className="flex items-center justify-between mb-2.5">
-            <h2 className="text-sm font-bold">Mes Vidéos</h2>
-            <button onClick={() => navigate('/videos')} className="text-xs text-muted-foreground flex items-center gap-0.5">
-              Voir tout <ChevronRight className="w-3.5 h-3.5" />
-            </button>
-          </div>
-          <div className="flex gap-3 overflow-x-auto no-scrollbar -mx-4 px-4">
-            {videos.slice(0, 6).map((video) => (
-              <button
-                key={video.id}
-                onClick={() => navigate(`/video-player?id=${video.id}`)}
-                className="flex-shrink-0 w-36"
-              >
-                <div className="relative w-36 h-20 rounded-xl overflow-hidden mb-1.5 bg-card">
-                  {video.thumbnail ? (
-                    <img src={video.thumbnail} alt={video.title} className="w-full h-full object-cover" />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center">
-                      <Film className="w-6 h-6 text-muted-foreground" />
-                    </div>
-                  )}
-                  <div className="absolute inset-0 flex items-center justify-center bg-black/20">
-                    <Play className="w-5 h-5 text-white" fill="currentColor" />
-                  </div>
-                  <span className="absolute bottom-1 right-1 text-[10px] bg-black/70 text-white px-1 rounded">
-                    {Math.floor(video.duration / 60)}:{Math.floor(video.duration % 60).toString().padStart(2, '0')}
-                  </span>
-                </div>
-                <p className="text-xs font-medium truncate">{video.title}</p>
-              </button>
-            ))}
-          </div>
-        </section>
-      )}
-
-      {/* Playlists */}
-      {playlists.length > 0 && (
-        <section className="px-4 mb-4">
-          <div className="flex items-center justify-between mb-2.5">
-            <h2 className="text-sm font-bold">Tes playlists</h2>
-            <button onClick={() => navigate('/library')} className="text-xs text-muted-foreground">Voir tout</button>
-          </div>
-          <div className="flex gap-3 overflow-x-auto no-scrollbar -mx-4 px-4">
-            {playlists.map((playlist) => (
-              <button
-                key={playlist.id}
-                onClick={() => navigate(`/playlist/${playlist.id}`)}
-                className="flex-shrink-0 w-28"
-              >
-                <div className="w-28 h-28 rounded-xl overflow-hidden mb-1.5 bg-card border border-border/10">
-                  {playlist.cover ? (
-                    <img src={playlist.cover} alt={playlist.name} className="w-full h-full object-cover" />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center">
-                      <Music className="w-6 h-6 text-muted-foreground" />
-                    </div>
-                  )}
-                </div>
-                <p className="text-xs font-semibold truncate">{playlist.name}</p>
-                <p className="text-[11px] text-muted-foreground">{playlist.trackIds.length} titres</p>
-              </button>
-            ))}
-          </div>
-        </section>
-      )}
-
-      {/* Favorites */}
-      {favorites.length > 0 && (
-        <section className="px-4 mb-4">
-          <div className="flex items-center justify-between mb-2.5">
-            <h2 className="text-sm font-bold">Favoris</h2>
-            <Heart className="w-4 h-4 text-red-500 fill-red-500" />
-          </div>
-          <div className="flex gap-3 overflow-x-auto no-scrollbar -mx-4 px-4">
-            {favorites.map((track) => (
-              <button
-                key={track.id}
-                onClick={() => handleTrackPlay(track)}
-                className="flex-shrink-0 w-28"
-              >
-                <div className="relative w-28 h-28 rounded-xl overflow-hidden mb-1.5">
-                  <img src={track.cover} alt={track.title} className="w-full h-full object-cover" />
-                </div>
-                <p className="text-xs font-semibold truncate">{track.title}</p>
-                <p className="text-[11px] text-muted-foreground truncate">{track.artist}</p>
-              </button>
-            ))}
           </div>
         </section>
       )}
 
       {/* Empty */}
-      {tracks.length === 0 && videos.length === 0 && (
+      {tracks.length === 0 && (
         <section className="px-4 py-16 text-center">
           <div className="w-16 h-16 rounded-full bg-card border border-border/20 flex items-center justify-center mx-auto mb-4">
             <Music className="w-7 h-7 text-muted-foreground" />
           </div>
           <h3 className="text-sm font-bold mb-1.5">Ta bibliothèque est vide</h3>
           <p className="text-muted-foreground text-xs mb-5 max-w-[240px] mx-auto">
-            Importe tes morceaux ou vidéos pour commencer
+            Importe tes morceaux pour commencer
           </p>
           <button
             onClick={() => navigate('/library')}

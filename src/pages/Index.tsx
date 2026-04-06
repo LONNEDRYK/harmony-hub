@@ -36,7 +36,6 @@ const Index = () => {
                 <circle cx="12" cy="12" r="1" fill="currentColor" stroke="none"/>
                 <circle cx="16" cy="12" r="1" fill="currentColor" stroke="none"/>
               </svg>
-              </svg>
             </button>
           </div>
         </div>

@@ -1,8 +1,8 @@
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useMusic } from '@/contexts/MusicContext';
-import navHome from '@/assets/nav-home.webp';
-import navSearch from '@/assets/nav-search.webp';
-import navLibrary from '@/assets/nav-library.webp';
+import navHome from '@/assets/nav-home.png';
+import navSearch from '@/assets/nav-search.png';
+import navLibrary from '@/assets/nav-library.png';
 
 const BottomNav = () => {
   const location = useLocation();
@@ -31,7 +31,7 @@ const BottomNav = () => {
                   onClick={() => navigate(item.path)}
                   className="flex items-center justify-center"
                 >
-                  <div className="w-[46px] h-[46px] bg-[#2a2a2a] rounded-full flex items-center justify-center">
+                  <div className="w-[46px] h-[46px] bg-[#1a1a1a] rounded-full flex items-center justify-center">
                     <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
                       <line x1="10" y1="3" x2="10" y2="17" stroke="white" strokeWidth="1.6" strokeLinecap="round" />
                       <line x1="3" y1="10" x2="17" y2="10" stroke="white" strokeWidth="1.6" strokeLinecap="round" />
